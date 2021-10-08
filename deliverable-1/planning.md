@@ -1,4 +1,4 @@
-# YOUR PRODUCT/TEAM NAME
+# IAI MOOClet Dashboard
 > _Note:_ This document is meant to evolve throughout the planning phase of your project.   That is, it makes sense for you commit regularly to this file while working on the project (especially edits/additions/deletions to the _Highlights_ section). Most importantly, it is a reflection of all the planning you work you've done in the first iteration. 
  > **This document will serve as a master plan between your team, your partner and your TA.**
 
@@ -18,7 +18,7 @@
    For example: This is not the time or the place to talk about which programming language and/or framework you are planning to use.
  * **Feel free (and very much encouraged) to include useful diagrams, mock-ups and/or links**.
 
-
+----------
  * We are creating a website that allows researchers using the MOOClet engine to easily visualize and download data. 
  * The MOOClet engine, created by the Intelligent Adaptive Interventions (IAI) lab at U of T, allows researchers to conduct a variety of A/B tests with the aim of building self-improving technological systems. Currently, using the MOOClet engine requires accessing it through the command line, which can be challenging for researchers who do not have a background in programming.
  * Our goal is to create a web interface for the MOOClet API where researchers can visualize and download their data without them needing to access them through the command line. Users will be able to create user accounts with an authentication system. Research heads will be able to create, modify, and delete MOOClet objects for their A/B tests through our website, as well as have control over which users can access the data associated with their studies. 
@@ -31,6 +31,7 @@
  * Be specific (e.g. a 'a third-year university student studying Computer Science' and not 'a student')
  * **Feel free to use personas. You can create your personas as part of this Markdown file, or add a link to an external site (for example, [Xtensio](https://xtensio.com/user-persona/)).**
 
+----------
  * Our target users are researchers that want to structure and visualize their data using a dashboard-style product. Specifically, the project will allow different roles amongst the researchers. An admin can manage researchers using the product and what access they have; anyone using the product can manipulate the data and visualize it.
 
 #### Q3: Why would your users choose your product? What are they using today to solve their problem/need?
@@ -43,8 +44,9 @@
     * Provide users with more accurate and/or informative data (what kind of data? Why is it useful to them?)
     * Does this application exist in another form? If so, how does your differ and provide value to the users?
     * How does this align with your partner's organization's values/mission/mandate?
-    
-    * Existing software such as Tableau, the most popular data visualization tool, is unable to satisfy the needs of our target users. It allows its users to visualize the data with suggestions from an AI as well as connect to databases and be deployed. However, our product will be able to hook up to the MOOClet engine and allow for specific features that Tableau and other competitors do not offer. We can automate actions using the MOOClet engine, allowing the user to have control from the dashboard. Not only that, our product will allow administrators to manage access to the platform and data, so that it can meet their specific requirements. 
+ 
+----------   
+ * Existing software such as Tableau, the most popular data visualization tool, is unable to satisfy the needs of our target users. It allows its users to visualize the data with suggestions from an AI as well as connect to databases and be deployed. However, our product will be able to hook up to the MOOClet engine and allow for specific features that Tableau and other competitors do not offer. We can automate actions using the MOOClet engine, allowing the user to have control from the dashboard. Not only that, our product will allow administrators to manage access to the platform and data, so that it can meet their specific requirements. 
 
 #### Q4: How will you build it?
 
@@ -55,6 +57,7 @@
  * Will you be using third party applications or APIs? If so, what are they?
  * What is your testing strategy?
 
+----------
  * We decided to build the app using Django for our backend, React for our frontend, and PostgreSQL for our database, which we will use to store user access data.
 We plan to use Github Actions as our CI/CD tool, and deploy the app on Heroku; however, the lab told us they will get back to us if they have a preferred method of deployment, so our deployment choice may change.
  * As for libraries, we still do not know the specifications of how we will implement the various functions of our app, so we will be doing research as the need for a library arises. However, we do know that we will be interacting with MOOClet, a third party application, which is the lab’s current software used to collect data.
@@ -69,6 +72,7 @@ We plan to use Github Actions as our CI/CD tool, and deploy the app on Heroku; h
  * User stories must contain acceptance criteria. Examples of user stories with different formats can be found here: https://www.justinmind.com/blog/user-story-examples/. **It is important that you provide a link to an artifact containing your user stories**.
  * If you have a partner, these must be reviewed and accepted by them
 
+----------
 1. As a head of a research study, I want to create new studies and track their data in a website deployed specifically for that purpose so that I can make use of MOOClet objects in my research..
 2. As a head of a research study, I want to visualize the data of my research collected by the MOOClet engine, and not any third-party engines.
 3. As a head of a research study, I want to authorize members of my research team so that they can view visualizations of the research data and download the data to determine any meaningful trends and results through analysis.
@@ -89,6 +93,7 @@ We plan to use Github Actions as our CI/CD tool, and deploy the app on Heroku; h
 
 **Briefly describe which option you have agreed to. Your partner cannot ask you to sign any legally binding agreements or documents pertaining to non-disclosure, confidentiality, IP ownership, etc.**
 
+----------
 * We have agreed with our partner that we can share the software and the code freely with anyone with a MIT license. Their code base for other software/MOOClet is open-source and available on GitHub.
 ----
 
@@ -103,6 +108,7 @@ List each team member and:
  * A description of their role(s) and responsibilities including the components they'll work on and non-software related work
  * 3 technical strengths and weaknesses each (e.g. languages, frameworks, libraries, development methodologies, etc.)
 
+----------
  * **Luca** will be working on the frontend side of the app, as well as on the CI/CD process. He will also collaborate on the writing elements of the project (such as the presentation). Some of his strengths are CSS and HTML knowledge from his internships, quick at learning new languages and processes, and good at handling responsibility and deadlines and at teamwork. Some of his weaknesses are: little knowledge of React and Django (but good knowledge of Javascript), tendency to overwork himself, and no experience in PostGreSQL (but lots of experience in MySQL).
 
  * **Jordan** will primarily be working on the backend side of the application, specifically . She will also be working on designing the user experience for the data visualization aspect of the software. She has experience writing python scripts and using python to analyze research data. She is also familiar with Django. Her weaknesses include having difficulty prioritizing tasks and unfamiliarity with front-end languages.
@@ -131,6 +137,7 @@ Describe meetings (and other events) you are planning to have.
    * You must provide meeting minutes.
    * You must have a regular meeting schedule established by the second meeting.  
 
+----------
  * We are planning to have weekly meetings between team members. We plan on meeting during the tutorial time, and having another ad hoc meeting online using discord if needed, or a short in-person prior to the lecture slot if needed. The purpose of each meeting will generally be on updating other members on progress made, determining how to proceed with a decision, dividing up some task, doing a coding session/review, etc. Some of us will also meet with our partner on Thursdays 3-4, and the meetings will be recorded for future reference. 
  * In the first partner meeting, we discussed the product itself - what the partners needed us to make, who the target user was, what features were needed and a ranking of priority for them, and other details. In this time we also went over ideas for how we would build the product and decided on future meeting times, methods, and how we would stay in touch. In the second partner meeting, we showed the partners our mockup and got feedback on it, and discussed the stack we decided on. 
 
@@ -146,6 +153,7 @@ List/describe the artifacts you will produce in order to organize your team.
    * How do tasks get assigned to team members?
    * How do you determine the status of work from inception to completion?
 
+----------
  * The main artifact that we will use to self-organize is Jira. We have split the product that we will make into "epics" (or features), and further split each epic into components we need in order to get that epic to work/be complete. The combination of these acts both as a checklist and task board, and it gives us an approximate schedule of when tasks will be started and completed by. This helps us to keep track of what needs to get done. Our partners have informed us the most important features are to them, and we plan on prioritizing tasks based on this. 
  * Team members are split into general subgroups (frontend and backend), and tasks will be split between members by mutual agreement. However, we anticipate the backend tasks being greater in number than the frontend tasks. For this, we plan on frontend members taking a few backend tasks in order for things to get done. Again, this splitting will be done by mutual agreement, factoring in things like which members are familiar with each task/technology. 
  * To determine the status of any task, we will use the Jira board. We have several status indicators, such as in progress, in testing, fixing bugs, and done. These will help us to keep track of the status.
@@ -159,6 +167,7 @@ Describe your team's working culture.
  * What is the expected frequency? What methods/channels are appropriate? 
  * If you have a partner project, what is your process (in detail) for communicating with your partner?
 
+----------
  * We are using Discord as our primary digital communication platform. We are expected to catch up on and respond to messages within 24 hours. We will also continuously communicate with each other about our work, providing updates when appropriate.
  * We are using Whatsapp as our platform for communicating with our partner.
 
@@ -166,6 +175,7 @@ Describe your team's working culture.
 **Meetings:**
  * How are people held accountable for attending meetings, completing action items? Is there a moderator or process?
 
+----------
  * On Mondays during or after our tutorial, we will meet as a group to check in and discuss our work. We will otherwise schedule meetings when necessary.
  * We are meeting with our partner once a week, on Thursdays. Jacob and Lucy will act as our representatives for these meetings, and will relay any critical information about the meetings to the rest of the group.
 
@@ -175,6 +185,7 @@ Describe your team's working culture.
 **Conflict Resolution:**
  * List at least three team scenarios/conflicts you discussed in lecture and how you decided you will resolve them. Indecisions? Non-responsive team members? Any other scenarios you can think of?
 
+----------
 1. **Indecision:**
  * When the group is unable to make a decision, we will either defer to the decision of the person with the most expertise in the area, or hold a ranked-choice vote, depending on what is most appropriate.
 
@@ -193,6 +204,7 @@ Describe your team's working culture.
 Specify 3 - 5 key decisions and/or insights that came up during your meetings
 and/or collaborative process.
 
+----------
  * Short (5 min' read max)
  * Decisions can be related to the product and/or the team process.
     * Mention which alternatives you were considering.
