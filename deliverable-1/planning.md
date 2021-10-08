@@ -23,7 +23,7 @@
  * The MOOClet engine, created by the Intelligent Adaptive Interventions (IAI) lab at U of T, allows researchers to conduct a variety of A/B tests with the aim of building self-improving technological systems. Currently, using the MOOClet engine requires accessing it through the command line, which can be challenging for researchers who do not have a background in programming.
  * Our goal is to create a web interface for the MOOClet API where researchers can visualize and download their data without them needing to access them through the command line. Users will be able to create user accounts with an authentication system. Research heads will be able to create, modify, and delete MOOClet objects for their A/B tests through our website, as well as have control over which users can access the data associated with their studies. 
  * Users who are authorized to access data from a study will be able download them in CSV form from our website. They will also be able to interact with the data visually through our website. For example, they will be able to see MOOClet data tables through our GUI and filter them by various fields, as well as see summaries of the data.
-
+ * Note: the initial web application mockups can be found on Figma, [here](https://www.figma.com/file/IPbd4S5ViKEQcaFPmQtqiW/CSC301-Project-Mockup?node-id=0%3A1).
 
 #### Q2: Who are your target users?
 
