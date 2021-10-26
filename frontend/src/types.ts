@@ -1,3 +1,20 @@
+export interface User {
+  id: number;
+  name: string;
+  email: never; // must be encrypted
+  password: never; // must be encrypted
+  gooogle_drive_info: unknown;
+  organizations: number[]; // Array of Organization.id
+}
+
+export interface Organization {
+  id: number;
+  name: string;
+  admins: number[]; // Array of User.id
+  staff: number[]; // Array of User.id
+  mooclets: unknown; // All mooclet objects belong to orgs, unknown shape (could be the IAI API access token?)
+}
+
 // TODO: ask for policy types
 export enum PolicyType {
   Noncontextual2x3FactorialThompsonSampling,
