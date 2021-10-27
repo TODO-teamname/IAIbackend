@@ -38,6 +38,7 @@ export default class MOOCletView extends Component<Props, State> {
       <div className="moocletview-wrapper">
         <p>MOOCletView</p>
         <MOOCletCreator />
+        <h1>Your MOOClets</h1>
         {this.renderMOOClets}
       </div>
     );

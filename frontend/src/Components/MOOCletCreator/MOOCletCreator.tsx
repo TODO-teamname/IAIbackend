@@ -2,6 +2,7 @@ import { Button, FormControl, TextField } from '@mui/material';
 import { Component, SyntheticEvent } from 'react';
 import './moocletcreator.css';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Props {}
 
 interface State {
@@ -24,6 +25,7 @@ export default class MOOCletCreator extends Component<Props, State> {
     const name = target.name;
     this.setState({
       [name]: value,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any); // <-- Hack
   };
 
@@ -35,6 +37,7 @@ export default class MOOCletCreator extends Component<Props, State> {
   render(): JSX.Element {
     return (
       <div className="mooclet-creator">
+        <h1>Create new MOOClet</h1>
         <form onSubmit={this.handleSubmit}>
           <FormControl className="new-mooclet-form">
             <TextField
