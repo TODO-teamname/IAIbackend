@@ -1,24 +1,45 @@
 import { Component } from 'react';
+import { uid } from 'react-uid';
+import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
 import './moocletview.css';
 
 interface Props {
-  moocletId: number | null;
+  userId: number;
+  organizationId: number;
 }
 
 interface State {
-  moocletId: number;
+  userId: number;
+  organizationId: number;
 }
 
 export default class MOOCletView extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    const moocletId = props.moocletId || 0; // TODO: api call to get a new mooclet id
     this.state = {
-      moocletId: moocletId,
+      userId: props.userId,
+      organizationId: props.organizationId,
     };
   }
 
+  renderMOOClets = (): JSX.Element => {
+    const mooclets = [{}]; // API: get all mooclets by org ID
+    return (
+      <div className="existing-mooclets">
+        {mooclets.map((mooclet) => {
+          return <div key={uid(mooclet)}></div>;
+        })}
+      </div>
+    );
+  };
+
   render(): JSX.Element {
-    return <p>MOOCLET</p>;
+    return (
+      <div className="moocletview-wrapper">
+        <p>MOOCletView</p>
+        <MOOCletCreator />
+        {this.renderMOOClets}
+      </div>
+    );
   }
 }

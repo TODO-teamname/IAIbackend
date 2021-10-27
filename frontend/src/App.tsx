@@ -19,7 +19,7 @@ function App(): JSX.Element {
           <Route exact path="/preferences">
             <Preferences />
           </Route>
-          <Route exact path="/mooclet" render={() => <MOOCletView moocletId={null} />} />
+          <Route exact path="/mooclet" render={() => <MOOCletView userId={0} organizationId={0} />} />
         </Switch>
       </BrowserRouter>
     </div>
