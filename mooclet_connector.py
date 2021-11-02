@@ -1,8 +1,9 @@
 import requests
 import datetime
 
-# hide the api token when pushing to github or deployment
-# MOOCLET_API_TOKEN = 
+# never use this token to perform any Delete requests
+# never use the token outside of this file
+MOOCLET_API_TOKEN = "db071db130485666bfd39ac15b9dc1eb9d75f9cc"
 
 POLICY_NAME_TO_ID = {"thompson_sampling_contextual": 6, 
                      "choose_policy_group": 12,
