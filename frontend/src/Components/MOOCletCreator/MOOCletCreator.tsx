@@ -1,4 +1,4 @@
-import { Add } from '@mui/icons-material';
+import { Add, Close } from '@mui/icons-material';
 import { Button, MenuItem, Select, SelectChangeEvent, TextField, Tooltip } from '@mui/material';
 import { Component, FormEvent, SyntheticEvent } from 'react';
 import { uid } from 'react-uid';
@@ -63,18 +63,61 @@ export default class MOOCletCreator extends Component<Props, State> {
           policy_options: {},
         };
         break;
-      case PolicyType.thompson_sampling_contextual:
-        break;
       case PolicyType.ts_configurable:
+        policyFragment.parameters = {
+          prior: {
+            failure: 1,
+            success: 1,
+          },
+          batch_size: 1,
+          max_rating: 1,
+          min_rating: undefined,
+          uniform_threshold: 1,
+          tspostdiff_thresh: undefined,
+          outcome_variable_name: 'unknown',
+        };
         break;
+      // case PolicyType.thompson_sampling_contextual:
+      //   break;
     }
     this.setState({});
   };
 
   updatePolicyParams = (e: SyntheticEvent, policyFragment: PolicyFragment): void => {
     const target = e.target as HTMLInputElement;
-    const params = policyFragment.parameters as ChoosePolicyGroupParameters;
-    params.policy_options[target.name] = parseFloat(target.value);
+    switch (policyFragment.policy) {
+      case PolicyType.choose_policy_group:
+        const cpgParams = policyFragment.parameters as ChoosePolicyGroupParameters;
+        cpgParams.policy_options[target.name] = parseFloat(target.value);
+        break;
+      case PolicyType.ts_configurable:
+        const tsConfigParams = policyFragment.parameters as TSConfigurableParameters;
+        switch (target.name) {
+          case 'batch_size':
+            tsConfigParams.batch_size = parseInt(target.value);
+            break;
+          case 'max_rating':
+            tsConfigParams.max_rating = parseFloat(target.value);
+            break;
+          case 'min_rating':
+            tsConfigParams.min_rating = parseFloat(target.value);
+            break;
+          case 'uniform_threshold':
+            tsConfigParams.uniform_threshold = parseInt(target.value);
+            break;
+          case 'tspostdiff_thresh':
+            tsConfigParams.tspostdiff_thresh = parseFloat(target.value);
+            break;
+          case 'outcome_variable_name':
+            tsConfigParams.outcome_variable_name = target.value;
+            break;
+        }
+        break;
+      // case PolicyType.thompson_sampling_contextual:
+      //   const tsContextualParams = policyFragment.parameters as ThompsonSamplingContextualParameters;
+      //   switch (target.name) {
+      //   }
+    }
     this.setState({}, () => console.log(policyFragment));
   };
 
@@ -102,7 +145,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     step: 0.01,
                   },
                 }}
-                onClick={(e) => this.updatePolicyParams(e, policyFragment)}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Probability of TS Configurable">
@@ -119,7 +162,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     step: 0.01,
                   },
                 }}
-                onClick={(e) => this.updatePolicyParams(e, policyFragment)}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Probability of Thompson Sampling Contextual">
@@ -136,7 +179,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     step: 0.01,
                   },
                 }}
-                onClick={(e) => this.updatePolicyParams(e, policyFragment)}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
           </div>
@@ -150,7 +193,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                 className="policy-menu-item"
                 required
                 type="number"
-                name="batch-size"
+                name="batch_size"
                 label="Batch Size"
                 InputProps={{
                   inputProps: {
@@ -158,6 +201,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     step: 1,
                   },
                 }}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Max Rating">
@@ -165,26 +209,28 @@ export default class MOOCletCreator extends Component<Props, State> {
                 className="policy-menu-item"
                 required
                 type="number"
-                name="max-rating"
+                name="max_rating"
                 label="Max Rating"
                 InputProps={{
                   inputProps: {
                     min: 0,
                   },
                 }}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Min Rating (Optional)">
               <TextField
                 className="policy-menu-item"
                 type="number"
-                name="min-rating"
+                name="min_rating"
                 label="Min Rating (Optional)"
                 InputProps={{
                   inputProps: {
                     min: 0,
                   },
                 }}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Uniform Threshold (contains burn-in size)">
@@ -192,7 +238,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                 className="policy-menu-item"
                 required
                 type="number"
-                name="uniform-threshold"
+                name="uniform_threshold"
                 label="Uniform Threshold"
                 InputProps={{
                   inputProps: {
@@ -200,6 +246,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     step: 1,
                   },
                 }}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="TS PostDiff Threshold (Optional)">
@@ -215,6 +262,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                     max: 0.99999,
                   },
                 }}
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
             <Tooltip title="Outcome Variable Name">
@@ -222,8 +270,9 @@ export default class MOOCletCreator extends Component<Props, State> {
                 className="policy-menu-item"
                 required
                 type="string"
-                name="outcome-variable-name"
+                name="outcome_variable_name"
                 label="Outcome Variable Name"
+                onChange={(e) => this.updatePolicyParams(e, policyFragment)}
               />
             </Tooltip>
           </div>
@@ -232,7 +281,8 @@ export default class MOOCletCreator extends Component<Props, State> {
       case PolicyType.thompson_sampling_contextual:
         return (
           <div className="policy-menu ts-contextual-menu">
-            <TextField className="policy-menu-item" />
+            {/* <TextField className="policy-menu-item" /> */}
+            <p> This policy is currently not supported. </p>
           </div>
         );
         break;
@@ -244,6 +294,12 @@ export default class MOOCletCreator extends Component<Props, State> {
         );
         break;
     }
+  };
+
+  removePolicy = (policy: PolicyFragment): void => {
+    this.setState({
+      policies: this.state.policies.filter((p) => p !== policy),
+    });
   };
 
   render(): JSX.Element {
@@ -275,6 +331,9 @@ export default class MOOCletCreator extends Component<Props, State> {
                   <MenuItem value={PolicyType.thompson_sampling_contextual}>Thompson Sampling Contextual</MenuItem>
                   <MenuItem value={PolicyType.ts_configurable}>TS Configurable</MenuItem>
                 </Select>
+                <Button onClick={() => this.removePolicy(policy)}>
+                  <Close />
+                </Button>
                 {this.renderPolicy(policy)}
               </div>
             );

@@ -51,9 +51,9 @@ export interface TSConfigurableParameters {
   };
   batch_size: number;
   max_rating: number;
-  min_rating: number;
+  min_rating: number | undefined;
   uniform_threshold: number;
-  tspostdiff_thresh: number;
+  tspostdiff_thresh: number | undefined;
   outcome_variable_name: string;
 }
 
