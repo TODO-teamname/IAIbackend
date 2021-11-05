@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { uid } from 'react-uid';
+import { PolicyType } from '../../types';
 import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
 import './moocletview.css';
 
@@ -23,12 +24,41 @@ export default class MOOCletView extends Component<Props, State> {
   }
 
   renderMOOClets = (): JSX.Element => {
-    const mooclets = [{}]; // API: get all mooclets by org ID
+    const mooclets = [
+      {
+        id: 1,
+        environment: null,
+        mooclet_id: null,
+        name: 'Test Mooclet 1',
+        policy: PolicyType.choose_policy_group,
+      },
+      {
+        id: 2,
+        environment: null,
+        mooclet_id: null,
+        name: 'Test Mooclet 2',
+        policy: PolicyType.choose_policy_group,
+      },
+    ]; // API: get all mooclets by org ID
     return (
-      <div className="existing-mooclets">
-        {mooclets.map((mooclet) => {
-          return <div key={uid(mooclet)}></div>;
-        })}
+      <div className="existing-mooclets-wrapper">
+        <h1>Your MOOClets</h1>
+        <div className="existing-mooclets">
+          {mooclets.map((mooclet) => {
+            return (
+              <div className="existing-mooclet" key={uid(mooclet)}>
+                <p>
+                  <b>Name: </b>
+                  {mooclet.name}
+                </p>
+                <p>
+                  <b>Policy: </b>
+                  {mooclet.policy}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -36,10 +66,10 @@ export default class MOOCletView extends Component<Props, State> {
   render(): JSX.Element {
     return (
       <div className="moocletview-wrapper">
-        <p>MOOCletView</p>
-        <MOOCletCreator />
-        <h1>Your MOOClets</h1>
-        {this.renderMOOClets}
+        <div className="moocletview">
+          <MOOCletCreator />
+          {this.renderMOOClets()}
+        </div>
       </div>
     );
   }
