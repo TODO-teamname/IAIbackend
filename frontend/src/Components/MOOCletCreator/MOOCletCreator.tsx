@@ -331,7 +331,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                   <MenuItem value={PolicyType.thompson_sampling_contextual}>Thompson Sampling Contextual</MenuItem>
                   <MenuItem value={PolicyType.ts_configurable}>TS Configurable</MenuItem>
                 </Select>
-                <Button onClick={() => this.removePolicy(policy)}>
+                <Button color="error" onClick={() => this.removePolicy(policy)}>
                   <Close />
                 </Button>
                 {this.renderPolicy(policy)}
