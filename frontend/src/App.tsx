@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import './App.css';
 import MOOCletView from './Components/MOOCletView/MOOCletView';
 import Preferences from './Components/Preferences/Preferences';
+import DataView from './Components/DataView/DataView';
 
 function App(): JSX.Element {
   return (
@@ -20,6 +21,7 @@ function App(): JSX.Element {
             <Preferences />
           </Route>
           <Route exact path="/mooclet" render={() => <MOOCletView userId={0} organizationId={0} />} />
+          <Route exact path="/data" render={() => <DataView moocletID={22} organizationId={0} />} />
         </Switch>
       </BrowserRouter>
     </div>
