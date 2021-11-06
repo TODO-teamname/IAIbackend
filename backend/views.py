@@ -75,6 +75,7 @@ def process_mooclet(request):
 def download_data(request):
     #TODO: Figure out exception handling
     #TODO: Stop using dummy variables
+    #TODO: Delete files!!! Use NamedTemporaryFile
     """
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
@@ -99,7 +100,7 @@ def download_data(request):
     filepath = BASE_DIR + '/backend/output_files/' + filename
 
     try:
-        path = open(filepath, 'x')
+        path = open(filepath, 'a')
     except requests.HTTPError as e:
         # TODO: I think this should return a server error?
         return e
@@ -112,13 +113,7 @@ def download_data(request):
 
     json.dump(data, path)
 
-    path.close()
-
-    path = open(filepath, 'r')
-
     mime_type, _ = mimetypes.guess_type(filepath)
-
-    print(mime_type)
 
     response = HttpResponse(path, content_type=mime_type)
     response['Content-Dispostion'] = "attachment; filename=%s" % filename
