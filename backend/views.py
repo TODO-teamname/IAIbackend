@@ -1,13 +1,19 @@
 from django.shortcuts import render
+import mimetypes
+import os
+import json
+from django.http.response import HttpResponse
 
 import requests
 import datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, renderer_classes
+from rest_framework import generics
 from .models import Mooclet
 from .serializers import MoocletSerializer
-from rest_framework import generics
+
+from .mooclet_connector import MoocletConnector
 
 ### USE THIS API WITH CARE ###
 MOOCLET_API_TOKEN = "db071db130485666bfd39ac15b9dc1eb9d75f9cc"
@@ -66,7 +72,58 @@ def process_mooclet(request):
             print("new mooclet saved to django db")
             return Response(mooclet_data, status=status.HTTP_201_CREATED)
 
+def download_data(request):
+    #TODO: Figure out exception handling
+    #TODO: Stop using dummy variables
+    """
+    try:
+        mooclet_id = str(request.query_params.get('mooclet_id'))
+        token = str(request.query_params.get('mooclet_token'))
+        url = str(request.query_params.get('mooclet_url'))
+    except:
+        print("error!")
+        return?
+    """
+    mooclet_id = 25
+    token = MOOCLET_API_TOKEN
+    url = URL
 
+    try:
+        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
+    except requests.HTTPError as e:
+        return e
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    now = datetime.datetime.now()
+    filename = f"{now}.csv"
+    filepath = BASE_DIR + '/backend/output_files/' + filename
+
+    try:
+        path = open(filepath, 'x')
+    except requests.HTTPError as e:
+        # TODO: I think this should return a server error?
+        return e
+
+    try:
+        data = mooclet_connector.get_values()
+    except requests.HTTPError as e:
+        os.remove(filepath)
+        return e
+
+    json.dump(data, path)
+
+    path.close()
+
+    path = open(filepath, 'r')
+
+    mime_type, _ = mimetypes.guess_type(filepath)
+
+    print(mime_type)
+
+    response = HttpResponse(path, content_type=mime_type)
+    response['Content-Dispostion'] = "attachment; filename=%s" % filename
+
+    return response
 
 class MoocletCreate(generics.ListCreateAPIView):  # list & create models
     queryset = Mooclet.objects.all()
