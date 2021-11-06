@@ -1,5 +1,5 @@
 .mooclet-creator {
-  border: 0.2rem solid black;
+  /* border: 0.2rem solid black; */
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -47,4 +47,10 @@
 .policy-select {
   width: 20rem;
   background-color: lightblue;
+}
+
+.alert-container {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }

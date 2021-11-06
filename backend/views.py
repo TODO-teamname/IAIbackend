@@ -41,7 +41,7 @@ def process_mooclet(request):
             mooclet.save()
             print("mooclet saved to django db")
             
-            return Response(mooclet_data, status=status.HTTP_200_OK)
+            return Response(mooclet_data, status=status.HTTP_200_OK, headers={'Access-Control-Allow-Origin': 'http://localhost:3000'})
 
     elif request.method == "POST":
         params = {"policy": int(str(request.query_params.get('policy_id'))),
@@ -64,7 +64,7 @@ def process_mooclet(request):
                       )
             mooclet.save()
             print("new mooclet saved to django db")
-            return Response(mooclet_data, status=status.HTTP_201_CREATED)
+            return Response(mooclet_data, status=status.HTTP_201_CREATED, headers={'Access-Control-Allow-Origin': 'http://localhost:3000'})
 
 
 

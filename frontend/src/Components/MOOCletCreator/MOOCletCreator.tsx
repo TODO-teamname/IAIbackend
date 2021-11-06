@@ -1,5 +1,5 @@
 import { Add, Close } from '@mui/icons-material';
-import { Button, MenuItem, Select, SelectChangeEvent, TextField, Tooltip } from '@mui/material';
+import { Alert, AlertTitle, Button, MenuItem, Select, SelectChangeEvent, TextField, Tooltip } from '@mui/material';
 import { Component, FormEvent, SyntheticEvent } from 'react';
 import { uid } from 'react-uid';
 import {
@@ -9,9 +9,15 @@ import {
   ThompsonSamplingContextualParameters,
 } from '../../types';
 import './moocletcreator.css';
+import axios from 'axios';
+
+const BASE_URL = 'http://127.0.0.1:8000/api/';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface Props {}
+interface Props {
+  // eslint-disable-next-line no-unused-vars
+  submitCallback: (arg0: number) => void;
+}
 
 interface PolicyFragment {
   policy: number;
@@ -27,6 +33,8 @@ interface State {
   policies: PolicyFragment[];
   variables: string[];
   versions: string[];
+  showAlert: boolean;
+  alertTexts: string[];
 }
 
 export default class MOOCletCreator extends Component<Props, State> {
@@ -44,8 +52,66 @@ export default class MOOCletCreator extends Component<Props, State> {
       ],
       variables: [],
       versions: [],
+      showAlert: false,
+      alertTexts: [],
     };
   }
+
+  handleSubmit = (e: FormEvent): void => {
+    e.preventDefault();
+    if (this.validateNewMOOClet()) {
+      console.log('Submitting new MOOClet', this.state.moocletName, this.state.policies);
+      const url =
+        BASE_URL + 'mooclet/?policy_id=' + this.state.policies[0].policy + '&mooclet_name=' + this.state.moocletName;
+      console.log(url);
+      axios.post(url).then(
+        (res) => {
+          console.log(res);
+          this.props.submitCallback(res.data.id);
+        },
+        (err) => {
+          console.log(err);
+        },
+      );
+    }
+  };
+
+  validateNewMOOClet = (): boolean => {
+    let validation = true;
+    const validationMessages = [];
+    // Validate that there is at least one policy
+    if (this.state.policies.length <= 0) {
+      validationMessages.push('You must have at least one policy.');
+      validation = false;
+    }
+    // Validate Policies
+    for (const policy of this.state.policies) {
+      switch (policy.policy) {
+        case PolicyType.choose_policy_group:
+          const params = policy.parameters as ChoosePolicyGroupParameters;
+          let probabilitySums = 0;
+          for (const option of Object.values(params.policy_options)) {
+            probabilitySums += option;
+          }
+          if (probabilitySums != 1) {
+            validationMessages.push('Choose Policy Group probabilities must add up to 1.');
+            validation = false;
+          }
+          break;
+        case PolicyType.ts_configurable:
+          // TODO
+          break;
+        case PolicyType.thompson_sampling_contextual:
+          // TODO
+          break;
+      }
+    }
+    this.setState({
+      showAlert: !validation,
+      alertTexts: validationMessages,
+    });
+    return validation;
+  };
 
   handleNameChange = (e: SyntheticEvent): void => {
     const target = e.target as HTMLInputElement;
@@ -118,12 +184,9 @@ export default class MOOCletCreator extends Component<Props, State> {
       //   switch (target.name) {
       //   }
     }
-    this.setState({}, () => console.log(policyFragment));
-  };
-
-  handleSubmit = (e: FormEvent): void => {
-    e.preventDefault();
-    console.log('Submitting new MOOClet', this.state.moocletName, this.state.policies);
+    // Debug:
+    // this.setState({}, () => console.log(policyFragment));
+    this.setState({});
   };
 
   renderPolicy = (policyFragment: PolicyFragment): JSX.Element => {
@@ -380,6 +443,22 @@ export default class MOOCletCreator extends Component<Props, State> {
             </Button>
           </div>
         </form>
+        <div className="alert-container">
+          {this.state.showAlert ? (
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            <Alert
+              severity="error"
+              onClose={() => {
+                this.setState({ showAlert: false });
+              }}
+            >
+              <AlertTitle>MOOClet Creation Failed</AlertTitle>
+              {this.state.alertTexts.map((alert) => {
+                return <p key={uid(alert)}>{alert}</p>;
+              })}
+            </Alert>
+          ) : null}
+        </div>
       </div>
     );
   }

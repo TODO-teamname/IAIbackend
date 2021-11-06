@@ -1,8 +1,11 @@
 import { Component } from 'react';
 import { uid } from 'react-uid';
-import { PolicyType } from '../../types';
 import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
 import './moocletview.css';
+import axios from 'axios';
+import { MOOClet } from '../../types';
+
+const BASE_URL = 'http://127.0.0.1:8000/api/';
 
 interface Props {
   userId: number;
@@ -12,6 +15,8 @@ interface Props {
 interface State {
   userId: number;
   organizationId: number;
+  mooclet_ids: number[];
+  mooclets: MOOClet[];
 }
 
 export default class MOOCletView extends Component<Props, State> {
@@ -20,31 +25,51 @@ export default class MOOCletView extends Component<Props, State> {
     this.state = {
       userId: props.userId,
       organizationId: props.organizationId,
+      mooclet_ids: [105, 106],
+      mooclets: [],
     };
   }
 
+  componentDidMount = (): void => {
+    const mooclets = this.state.mooclets;
+    for (const mooclet_id of this.state.mooclet_ids) {
+      const url = BASE_URL + 'mooclet/?mooclet_id=' + mooclet_id;
+      axios.get(url).then(
+        (res) => {
+          mooclets.push(res.data);
+          this.setState({
+            mooclets: mooclets,
+          });
+        },
+        (err) => {
+          console.log(err);
+        },
+      );
+    }
+  };
+
+  addMOOClet = (mooclet_id: number): void => {
+    const mooclets = this.state.mooclets;
+    const url = BASE_URL + 'mooclet/?mooclet_id=' + mooclet_id;
+    axios.get(url).then(
+      (res) => {
+        mooclets.push(res.data);
+        this.setState({
+          mooclets: mooclets,
+        });
+      },
+      (err) => {
+        console.log(err);
+      },
+    );
+  };
+
   renderMOOClets = (): JSX.Element => {
-    const mooclets = [
-      {
-        id: 1,
-        environment: null,
-        mooclet_id: null,
-        name: 'Test Mooclet 1',
-        policy: PolicyType.choose_policy_group,
-      },
-      {
-        id: 2,
-        environment: null,
-        mooclet_id: null,
-        name: 'Test Mooclet 2',
-        policy: PolicyType.choose_policy_group,
-      },
-    ]; // API: get all mooclets by org ID
     return (
       <div className="existing-mooclets-wrapper">
         <h1>Your MOOClets</h1>
         <div className="existing-mooclets">
-          {mooclets.map((mooclet) => {
+          {this.state.mooclets.map((mooclet) => {
             return (
               <div className="existing-mooclet" key={uid(mooclet)}>
                 <p>
@@ -67,8 +92,8 @@ export default class MOOCletView extends Component<Props, State> {
     return (
       <div className="moocletview-wrapper">
         <div className="moocletview">
-          <MOOCletCreator />
           {this.renderMOOClets()}
+          <MOOCletCreator submitCallback={this.addMOOClet} />
         </div>
       </div>
     );
