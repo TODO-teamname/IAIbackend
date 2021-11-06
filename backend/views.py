@@ -2,7 +2,7 @@ from django.shortcuts import render
 import mimetypes
 import os
 import json
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, HttpResponseBadRequest
 
 import requests
 import datetime
@@ -13,7 +13,7 @@ from rest_framework import generics
 from .models import Mooclet
 from .serializers import MoocletSerializer
 
-from .mooclet_connector import MoocletConnector
+from .mooclet_connector import MoocletConnector, MoocletCreator
 
 ### USE THIS API WITH CARE ###
 MOOCLET_API_TOKEN = "db071db130485666bfd39ac15b9dc1eb9d75f9cc"
@@ -92,26 +92,23 @@ def download_data(request):
     try:
         mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
     except requests.HTTPError as e:
-        return e
+        return HttpResponseBadRequest(e)
 
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     now = datetime.datetime.now()
     filename = f"{now}.csv"
     filepath = BASE_DIR + '/backend/output_files/' + filename
 
-    try:
-        path = open(filepath, 'a')
-    except requests.HTTPError as e:
-        # TODO: I think this should return a server error?
-        return e
+    path = open(filepath, 'x')
 
     try:
         data = mooclet_connector.get_values()
     except requests.HTTPError as e:
-        os.remove(filepath)
-        return e
+        return HttpResponseBadRequest(e)
 
     json.dump(data, path)
+    path.close()
+    path = open(filepath, 'r')
 
     mime_type, _ = mimetypes.guess_type(filepath)
 
