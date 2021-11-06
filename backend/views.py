@@ -80,13 +80,14 @@ def process_policy_parameters(request):
     token = MOOCLET_API_TOKEN
     mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
 
-    if request.method == "GET":
+    if request.method == "GET":  # given mooclet_id
         policy_params_data = mooclet_connector.get_policy_parameters()
         # TODO: add policy parameter field to Django model Mooclet() & seed here
         return Response(policy_params_data, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
-    elif request.method == "POST":  # TODO: also requires specifying policy params in POST req
+    elif request.method == "POST":  # given mooclet_id and policy_id
+        # TODO: also requires specifying policy params in POST req
         # pre-condition: the mooclet must have been created already
-        policy_id = mooclet_connector.get_mooclet()["policy"]
+        policy_id = int(str(request.query_params.get('policy_id')))
         parameters = {
             "policy_options": {
                 "uniform_random": 0.0,
