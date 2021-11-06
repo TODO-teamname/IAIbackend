@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework import generics
 from .models import Mooclet
 from .serializers import MoocletSerializer
+import tempfile # used for downloader
 
 from .mooclet_connector import MoocletConnector, MoocletCreator
 from . import mooclet_connector
@@ -98,50 +99,40 @@ def process_policy_parameters(request):
         # TODO: add policy parameter field to Django model Mooclet() & seed here
         return Response(policy_params_object_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
 
-        
-
 
 def download_data(request):
-    #TODO: Figure out exception handling
-    #TODO: Stop using dummy variables
-    #TODO: Delete files!!! Use NamedTemporaryFile
-    """
+    #TODO: Reformat file
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
         token = str(request.query_params.get('mooclet_token'))
         url = str(request.query_params.get('mooclet_url'))
-    except:
-        print("error!")
-        return?
-    """
-    mooclet_id = 25
-    token = MOOCLET_API_TOKEN
-    url = URL
+    except (AttributeError, requests.HTTPError) as e:
+        # NOTE: We eventually want to stop using this, but use for testing.
+        print("Error: " + str(e))
+        print("Using dummy values")
+        mooclet_id = 25
+        token = MOOCLET_API_TOKEN
+        url = URL
+        #return HttpResponseBadRequest(e)
+
 
     try:
         mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    now = datetime.datetime.now()
-    filename = f"{now}.csv"
-    filepath = BASE_DIR + '/backend/output_files/' + filename
-
-    path = open(filepath, 'x')
-
-    try:
         data = mooclet_connector.get_values()
     except requests.HTTPError as e:
         return HttpResponseBadRequest(e)
 
-    json.dump(data, path)
-    path.close()
-    path = open(filepath, 'r')
+    tfile = tempfile.NamedTemporaryFile(mode="w+")
 
-    mime_type, _ = mimetypes.guess_type(filepath)
+    json.dump(data, tfile)
 
-    response = HttpResponse(path, content_type=mime_type)
+    tfile.flush()
+    tfile.seek(0)
+
+    now = datetime.datetime.now()
+    filename = f"{now}.csv"
+
+    response = HttpResponse(tfile, content_type="text/csv")
     response['Content-Dispostion'] = "attachment; filename=%s" % filename
 
     return response
