@@ -94,6 +94,28 @@ class MoocletConnector:
             raise
 
         return objects.json()
+    
+
+    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
+        endpoint = "policyparameters"
+        params = {
+            "mooclet": self.mooclet_id,
+            "policy": policy_id,
+            "parameters": parameters
+        }
+        objects = requests.post(
+            url = self.url + endpoint,
+            data = params,
+            headers = {'Authorization': f'Token {self.token}'}
+        )
+
+        try:
+            objects.raise_for_status()
+        except requests.HTTPError as e:
+            print("Error: " + str(e))
+            raise
+
+        return objects.json() 
 
 
     def get_values(self) -> Dict:
