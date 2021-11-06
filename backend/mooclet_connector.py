@@ -10,11 +10,25 @@ POLICY_NAME_TO_ID = {"thompson_sampling_contextual": 6,
                      "choose_policy_group": 12,
                      "ts_configurable": 17}
 
-def _mooclet_api_call(url, data={}, params={}, headers={}) -> Dict:
+def _mooclet_get_call(url, params={}, headers={}) -> Dict:
     objects = requests.get(
         url = url,
-        data = data,
         params = params,
+        headers = headers
+    )
+
+    try:
+        objects.raise_for_status()
+    except requests.HTTPError as e:
+        print("Error: " + str(e))
+        raise
+
+    return objects.json()
+
+def _mooclet_post_call(url, data={}, headers={}) -> Dict:
+    objects = requests.post(
+        url = url,
+        data = data,
         headers = headers
     )
 
@@ -41,7 +55,7 @@ class MoocletCreator:
                   "name": self.mooclet_name}
         headers = {'Authorization': f'Token {self.token}'}
 
-        return _mooclet_api_call(url, data=data, headers=headers)
+        return _mooclet_post_call(url, data=data, headers=headers)
 
 
 class MoocletConnector:
@@ -66,7 +80,7 @@ class MoocletConnector:
         if headers == None:
             headers = {'Authorization': f'Token {self.token}'}
 
-        return _mooclet_api_call(url, params=params, headers=headers)
+        return _mooclet_get_call(url, params=params, headers=headers)
 
     def _mooclet_post_call(self, endpoint, data, headers=None, url=None) -> Dict:
         if url == None:
@@ -75,7 +89,7 @@ class MoocletConnector:
         if headers == None:
             headers = {'Authorization': f'Token {self.token}'}
 
-        return _mooclet_api_call(url, data=data, headers=headers)
+        return _mooclet_post_call(url, data=data, headers=headers)
 
     def get_mooclet(self) -> Dict:
         url = self.url + "mooclet/" + str(self.mooclet_id)
