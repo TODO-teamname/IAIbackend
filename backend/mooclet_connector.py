@@ -1,4 +1,5 @@
 import requests
+import json
 from typing import Dict
 
 # never use this token to perform any Delete requests
@@ -26,6 +27,8 @@ def _mooclet_get_call(url, params={}, headers={}) -> Dict:
     return objects.json()
 
 def _mooclet_post_call(url, data={}, headers={}) -> Dict:
+    print("***********")
+    print(url, data, headers)
     objects = requests.post(
         url = url,
         data = data,
@@ -50,7 +53,7 @@ class MoocletCreator:
     
     def create_mooclet(self) -> Dict:
         endpoint = "mooclet"
-        url = self.url + "endpoint",
+        url = self.url + endpoint,
         data = {"policy": POLICY_NAME_TO_ID[self.policy_name],  # policy id
                   "name": self.mooclet_name}
         headers = {'Authorization': f'Token {self.token}'}
@@ -101,38 +104,14 @@ class MoocletConnector:
     def get_policy_parameters(self) -> Dict:
         return self._mooclet_get_call("policyparameters")
     
-
     def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
         data = {
             "mooclet": self.mooclet_id,
             "policy": policy_id,
-            "parameters": parameters
+            "parameters": json.dumps(parameters)
         }
 
         return self._mooclet_post_call("policyparameters", data=data)
-
-    """
-    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
-        endpoint = "policyparameters"
-        params = {
-            "mooclet": self.mooclet_id,
-            "policy": policy_id,
-            "parameters": parameters
-        }
-        objects = requests.post(
-            url = self.url + endpoint,
-            data = params,
-            headers = {'Authorization': f'Token {self.token}'}
-        )
-
-        try:
-            objects.raise_for_status()
-        except requests.HTTPError as e:
-            print("Error: " + str(e))
-            raise
-
-        return objects.json() 
-    """
 
     def get_values(self) -> Dict:
         return self._mooclet_get_call("value")
@@ -140,7 +119,10 @@ class MoocletConnector:
     def get_policy_parameters_history(self) -> Dict:
         return self._mooclet_get_call("policyparametershistory")
     
-#mooclet = MoocletConnector(25)
+
+# mooclet = MoocletConnector(mooclet_id=106, token=DUMMY_MOOCLET_API_TOKEN, url=DUMMY_MOOCLET_URL)
+# response = mooclet.create_policy_parameters(policy_id=6,parameters={"policy_options":{"uniform_random": 0.0, "thompson_sampling_contextual": 1.0}})
+# print(response)
 
 # new_mooclet_id = mooclet.create_mooclet("301 " + str(datetime.datetime.now()), 
 #                                         "thompson_sampling_contextual")
