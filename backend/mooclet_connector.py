@@ -56,27 +56,75 @@ class MoocletConnector:
         except requests.HTTPError as e:
             raise e
 
-    def _mooclet_get(self, endpoint, url_ending="") -> Dict:
-        url = self.url + endpoint + url_ending
-        params = {"mooclet": self.mooclet_id}
-        headers = {'Authorization': f'Token {self.token}'}
+    def _mooclet_get_call(self, endpoint, params=None, headers=None, url=None) -> Dict:
+        if url == None:
+            url = self.url + endpoint
+
+        if params == None:
+            params = {"mooclet": self.mooclet_id}
+
+        if headers == None:
+            headers = {'Authorization': f'Token {self.token}'}
 
         return _mooclet_api_call(url, params=params, headers=headers)
 
+    def _mooclet_post_call(self, endpoint, data, headers=None, url=None) -> Dict:
+        if url == None:
+            url = self.url + endpoint
+
+        if headers == None:
+            headers = {'Authorization': f'Token {self.token}'}
+
+        return _mooclet_api_call(url, data=data, headers=headers)
+
     def get_mooclet(self) -> Dict:
-        return self._mooclet_get("mooclet", url_ending="/" + str(self.mooclet_id))
+        url = self.url + "mooclet/" + str(self.mooclet_id)
+        return self._mooclet_get_call("mooclet", url=url)
 
     def get_versions(self) -> Dict:
-        return self._mooclet_get("version-name")
+        return self._mooclet_get_call("version-name")
 
     def get_policy_parameters(self) -> Dict:
-        return self._mooclet_get("policyparameters")
+        return self._mooclet_get_call("policyparameters")
+    
+
+    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
+        data = {
+            "mooclet": self.mooclet_id,
+            "policy": policy_id,
+            "parameters": parameters
+        }
+
+        return self._mooclet_post_call("policyparameters", data=data)
+
+    """
+    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
+        endpoint = "policyparameters"
+        params = {
+            "mooclet": self.mooclet_id,
+            "policy": policy_id,
+            "parameters": parameters
+        }
+        objects = requests.post(
+            url = self.url + endpoint,
+            data = params,
+            headers = {'Authorization': f'Token {self.token}'}
+        )
+
+        try:
+            objects.raise_for_status()
+        except requests.HTTPError as e:
+            print("Error: " + str(e))
+            raise
+
+        return objects.json() 
+    """
 
     def get_values(self) -> Dict:
-        return self._mooclet_get("value")
+        return self._mooclet_get_call("value")
 
     def get_policy_parameters_history(self) -> Dict:
-        return self._mooclet_get("policyparametershistory")
+        return self._mooclet_get_call("policyparametershistory")
     
 #mooclet = MoocletConnector(25)
 
