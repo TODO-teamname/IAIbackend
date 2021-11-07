@@ -76,50 +76,87 @@ def process_mooclet(request):
 # call external api to create & get policy parameters for a given mooclet_id
 @api_view(('GET', 'POST'))
 def process_policy_parameters(request):
-    mooclet_id = int(str(request.query_params.get('mooclet_id')))
     url = URL
     token = MOOCLET_API_TOKEN
-    mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
+    try:
+        mooclet_id = int(str(request.query_params.get('mooclet_id')))
+    except (AttributeError, requests.HTTPError) as e:
+        print("Error: gave wrong parameters: check mooclet_id")
+        print(str(e))
+
+    try:
+        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
+    except requests.HTTPError as e:
+        return HttpResponseBadRequest(e)
 
     if request.method == "GET":  # given mooclet_id
-        policy_params_data = mooclet_connector.get_policy_parameters()
-        # TODO: add policy parameter field to Django model Mooclet() & seed here
-        return Response(policy_params_data, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+        try:
+            policy_params_data = mooclet_connector.get_policy_parameters()
+            # TODO: add policy parameter field to Django model Mooclet() & seed here
+            return Response(policy_params_data, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+        except requests.HTTPError as e:
+            return HttpResponseBadRequest(e)
+
     elif request.method == "POST":  # given mooclet_id and policy_id
         # TODO: also requires specifying policy params in POST req
         # pre-condition: the mooclet must have been created already
-        policy_id = int(str(request.query_params.get('policy_id')))
-        parameters = {
-            "policy_options": {
-                "uniform_random": 0.0,
-                "thompson_sampling_contextual": 1.0
+        try:
+            policy_id = int(str(request.query_params.get('policy_id')))
+            parameters = {
+                "policy_options": {
+                    "uniform_random": 0.0,
+                    "thompson_sampling_contextual": 1.0
+                }
             }
-        }
-        policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, parameters)
-        # TODO: add policy parameter field to Django model Mooclet() & seed here
-        return Response(policy_params_object_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
-
+        except (AttributeError, requests.HTTPError) as e:
+            print("Error: gave wrong parameters: check policy_id or parameters")
+            print(str(e))
+        try:
+            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, parameters)
+            # TODO: add policy parameter field to Django model Mooclet() & seed here
+            return Response(policy_params_object_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+        except requests.HTTPError as e:
+            return HttpResponseBadRequest(e)
+            
 
 # call external api to create & get variables and their values for a given mooclet_id
 @api_view(('GET', 'POST'))
 def process_variable_values(request):
-    mooclet_id = int(str(request.query_params.get('mooclet_id')))
     url = URL
     token = MOOCLET_API_TOKEN
-    mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
-    if request.method == "GET":
-        variables_values = mooclet_connector.get_values()
-        return Response(variables_values, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
-    elif request.method == "POST":
-        variable_name = str(request.query_params.get('variable_name'))
-        initial_value = float(str(request.query_params.get('variable_value')))
-        # create variable
-        variable_created = mooclet_connector.create_variable(variable_name)
-        # set initial value for this variable
-        variable_value_created = mooclet_connector.create_value(variable_name, initial_value)
-        return Response(variable_value_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+    try:
+        mooclet_id = int(str(request.query_params.get('mooclet_id')))
+    except (AttributeError, requests.HTTPError) as e:
+        print("Error: gave wrong parameters: check mooclet_id")
+        print(str(e))
 
-# TODO: add error checks
+    try:
+        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
+    except requests.HTTPError as e:
+        return HttpResponseBadRequest(e)
+    
+    if request.method == "GET":
+        try:
+            variables_values = mooclet_connector.get_values()
+            return Response(variables_values, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+        except requests.HTTPError as e:
+            return HttpResponseBadRequest(e)
+            
+    elif request.method == "POST":
+        try:
+            variable_name = str(request.query_params.get('variable_name'))
+            initial_value = float(str(request.query_params.get('variable_value')))
+        except (AttributeError, requests.HTTPError) as e:
+            print("Error: gave wrong parameters: check variable_name or variable_value")
+            print(str(e))
+        try:
+            # create variable
+            variable_created = mooclet_connector.create_variable(variable_name)
+            # set initial value for this variable
+            variable_value_created = mooclet_connector.create_value(variable_name, initial_value)
+            return Response(variable_value_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+        except requests.HTTPError as e:
+            return HttpResponseBadRequest(e)
 
 
 def download_data(request):
