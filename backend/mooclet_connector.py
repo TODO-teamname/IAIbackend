@@ -21,14 +21,13 @@ def _mooclet_get_call(url, params={}, headers={}) -> Dict:
     try:
         objects.raise_for_status()
     except requests.HTTPError as e:
+        print("error message: ", objects.json())
         print("Error: " + str(e))
         raise
 
     return objects.json()
 
 def _mooclet_post_call(url, data={}, headers={}) -> Dict:
-    print("***********")
-    print(url, data, headers)
     objects = requests.post(
         url = url,
         data = data,
@@ -38,6 +37,7 @@ def _mooclet_post_call(url, data={}, headers={}) -> Dict:
     try:
         objects.raise_for_status()
     except requests.HTTPError as e:
+        print("error message: ", objects.json())
         print("Error: " + str(e))
         raise
 
@@ -110,11 +110,22 @@ class MoocletConnector:
             "policy": policy_id,
             "parameters": json.dumps(parameters)
         }
-
         return self._mooclet_post_call("policyparameters", data=data)
 
-    def get_values(self) -> Dict:
+    def get_values(self) -> Dict:  # for getting variable values
         return self._mooclet_get_call("value")
+
+    def create_value(self, variable_name, initial_value):
+        data = {
+            "variable": variable_name,
+            "value": initial_value,
+            "mooclet": self.mooclet_id
+        }
+        return self._mooclet_post_call("value", data=data)
+
+    def create_variable(self, variable_name: str) -> Dict:
+        data = {"name": variable_name}
+        return self._mooclet_post_call("variable", data=data)
 
     def get_policy_parameters_history(self) -> Dict:
         return self._mooclet_get_call("policyparametershistory")

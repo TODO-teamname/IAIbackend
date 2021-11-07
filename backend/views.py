@@ -100,6 +100,28 @@ def process_policy_parameters(request):
         return Response(policy_params_object_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
 
 
+# call external api to create & get variables and their values for a given mooclet_id
+@api_view(('GET', 'POST'))
+def process_variable_values(request):
+    mooclet_id = int(str(request.query_params.get('mooclet_id')))
+    url = URL
+    token = MOOCLET_API_TOKEN
+    mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
+    if request.method == "GET":
+        variables_values = mooclet_connector.get_values()
+        return Response(variables_values, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+    elif request.method == "POST":
+        variable_name = str(request.query_params.get('variable_name'))
+        initial_value = float(str(request.query_params.get('variable_value')))
+        # create variable
+        variable_created = mooclet_connector.create_variable(variable_name)
+        # set initial value for this variable
+        variable_value_created = mooclet_connector.create_value(variable_name, initial_value)
+        return Response(variable_value_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+
+# TODO: add error checks
+
+
 def download_data(request):
     #TODO: Reformat file
     try:
