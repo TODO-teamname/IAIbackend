@@ -104,7 +104,7 @@ def process_policy_parameters(request):
             parameters = {
                 "policy_options": {
                     "uniform_random": 0.0,
-                    "thompson_sampling_contextual": 1.0
+                    "ts_configurable": 1.0
                 }
             }
         except (AttributeError, requests.HTTPError) as e:
@@ -120,7 +120,7 @@ def process_policy_parameters(request):
 
 # call external api to create & get variables and their values for a given mooclet_id
 @api_view(('GET', 'POST'))
-def process_variable_values(request):
+def process_variables(request):
     url = URL
     token = MOOCLET_API_TOKEN
     try:
@@ -144,16 +144,14 @@ def process_variable_values(request):
     elif request.method == "POST":
         try:
             variable_name = str(request.query_params.get('variable_name'))
-            initial_value = float(str(request.query_params.get('variable_value')))
         except (AttributeError, requests.HTTPError) as e:
             print("Error: gave wrong parameters: check variable_name or variable_value")
             print(str(e))
         try:
             # create variable
             variable_created = mooclet_connector.create_variable(variable_name)
-            # set initial value for this variable
-            variable_value_created = mooclet_connector.create_value(variable_name, initial_value)
-            return Response(variable_value_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+            temporary_value = mooclet_connector.create_value(variable_name)  # TODO: remove; don't manually create value
+            return Response(variable_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
