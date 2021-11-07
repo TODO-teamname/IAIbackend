@@ -4,6 +4,7 @@ import './App.css';
 import MOOCletView from './Components/MOOCletView/MOOCletView';
 import Login from './Components/Login/Login';
 import Preferences from './Components/Preferences/Preferences';
+import DataView from './Components/DataView/DataView';
 import useToken from './Components/useToken';
 import Dashboard from './Components/Dashboard/Dashboard';
 import MOOCletDashboard from './Components/Dashboard/MOOCletDashboard';
@@ -32,6 +33,7 @@ function App(): JSX.Element {
             <Preferences />
           </Route>
           <Route exact path="/mooclet" render={() => <MOOCletView userId={0} organizationId={0} />} />
+          <Route exact path="/data" render={() => <DataView moocletID={22} organizationId={0} />} />
         </Switch>
       </BrowserRouter>
     </div>
