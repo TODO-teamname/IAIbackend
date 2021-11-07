@@ -16,7 +16,6 @@ export interface Organization {
   mooclets: unknown; // All mooclet objects belong to orgs, unknown shape (could be the IAI API access token?)
 }
 
-// TODO: ask for policy types
 export enum PolicyType {
   thompson_sampling_contextual = 6,
   choose_policy_group = 12,
@@ -54,7 +53,7 @@ export interface TSConfigurableParameters {
   min_rating: number | undefined;
   uniform_threshold: number;
   tspostdiff_thresh: number | undefined;
-  outcome_variable_name: string;
+  outcome_variable_name: string; // TODO: Ask why this is outcome_variable_name and tsContext is just outcome_variable ?
 }
 
 export interface ThompsonSamplingContextualParameters {
@@ -65,7 +64,7 @@ export interface ThompsonSamplingContextualParameters {
   variance_b: number;
   action_space: Record<string, number[]>;
   outcome_variable: string;
-  include_intercept: number;
+  include_intercept: boolean;
   uniform_threshold: number;
   regression_formula: string; //"dummy_reward_name ~ isarm1 + context1 * isarm1 + context2 * isarm1"
   contextual_variables: string[];

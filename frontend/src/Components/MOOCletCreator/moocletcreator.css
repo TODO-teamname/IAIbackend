@@ -51,6 +51,9 @@
 
 .alert-container {
   position: fixed;
+  opacity: 90%;
+  margin: 1rem;
+  z-index: 5;
   right: 0;
   bottom: 0;
 }
