@@ -12,5 +12,5 @@ urlpatterns = [
     path('api/mooclet/', views.process_mooclet),  # params for POST: mooclet_name, policy_id; params for GET: mooclet_id
     path('download/', views.download_data),
     path('api/policyparameters/', views.process_policy_parameters), 
-    path('api/variable_values/', views.process_variable_values), 
+    path('api/variables/', views.process_variables), 
 ]
