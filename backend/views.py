@@ -1,21 +1,20 @@
 from django.shortcuts import render
-import mimetypes
-import os
-import json
 from django.http.response import HttpResponse, HttpResponseBadRequest
 
 import requests
 import datetime
+import tempfile # used for downloader
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework import generics
 from .models import Mooclet
 from .serializers import MoocletSerializer
-import tempfile # used for downloader
 
-from .mooclet_connector import MoocletConnector, MoocletCreator
-from . import mooclet_connector
+from .utils.mooclet_connector import MoocletConnector, MoocletCreator
+from .utils import mooclet_connector
+from .utils.DataPipelines.MoocletPipeline import MoocletPipeline
+
 
 ### USE THIS API TOKEN WITH CARE ###
 MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
@@ -172,7 +171,6 @@ def download_data(request):
     token = MOOCLET_API_TOKEN
     url = URL
 
-
     try:
         mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
         data = mooclet_connector.get_values()
@@ -181,13 +179,9 @@ def download_data(request):
 
     tfile = tempfile.NamedTemporaryFile(mode="w+")
 
-    json.dump(data, tfile)
-
-    tfile.flush()
-    tfile.seek(0)
-
-    now = datetime.datetime.now()
-    filename = f"{now}.csv"
+    a = MoocletPipeline(mooclet_connector)
+    a.get_output(tfile)
+    filename = f"{mooclet_id}.csv"
 
     response = HttpResponse(tfile, content_type="text/csv")
     response['Content-Dispostion'] = "attachment; filename=%s" % filename
