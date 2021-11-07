@@ -1,5 +1,16 @@
 import { Add, Close } from '@mui/icons-material';
-import { Alert, AlertTitle, Button, MenuItem, Select, SelectChangeEvent, TextField, Tooltip } from '@mui/material';
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  FormControlLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Switch,
+  TextField,
+  Tooltip,
+} from '@mui/material';
 import { Component, FormEvent, SyntheticEvent } from 'react';
 import { uid } from 'react-uid';
 import {
@@ -28,11 +39,19 @@ interface PolicyFragment {
     | ThompsonSamplingContextualParameters;
 }
 
+interface VariableFragment {
+  name: string;
+}
+
+interface VersionFragment {
+  name: string;
+}
+
 interface State {
   moocletName: string;
   policies: PolicyFragment[];
-  variables: string[];
-  versions: string[];
+  variables: VariableFragment[];
+  versions: VersionFragment[];
   showAlert: boolean;
   alertTexts: string[];
 }
@@ -60,11 +79,15 @@ export default class MOOCletCreator extends Component<Props, State> {
   handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
     if (this.validateNewMOOClet()) {
-      console.log('Submitting new MOOClet', this.state.moocletName, this.state.policies);
-      const url =
-        BASE_URL + 'mooclet/?policy_id=' + this.state.policies[0].policy + '&mooclet_name=' + this.state.moocletName;
-      console.log(url);
-      axios.post(url).then(
+      // POST new MOOClet
+      const policies = this.state.policies.map((policy) => policy.policy);
+      const policy = policies.includes(PolicyType.choose_policy_group)
+        ? PolicyType.choose_policy_group
+        : this.state.policies[0].policy;
+      const mooclet_url = BASE_URL + 'mooclet/?policy_id=' + policy + '&mooclet_name=' + this.state.moocletName;
+      console.log(this.state.policies);
+      console.log('Submitting new MOOClet', mooclet_url);
+      axios.post(mooclet_url).then(
         (res) => {
           console.log(res);
           this.props.submitCallback(res.data.id);
@@ -73,6 +96,22 @@ export default class MOOCletCreator extends Component<Props, State> {
           console.log(err);
         },
       );
+
+      // POST policies
+      for (const policy of this.state.policies) {
+        // const policy_url = BASE_URL + ''
+        // TODO: POST policy
+      }
+
+      // POST versions
+      for (const version of this.state.versions) {
+        // TODO: POST version
+      }
+
+      // POST variables
+      for (const variable of this.state.variables) {
+        // TODO: POST variable
+      }
     }
   };
 
@@ -84,13 +123,24 @@ export default class MOOCletCreator extends Component<Props, State> {
       validationMessages.push('You must have at least one policy.');
       validation = false;
     }
+    const policyTypes = this.state.policies.map((policy) => policy.policy);
+    // Validate no duplicate policies
+    if (new Set(policyTypes).size !== policyTypes.length) {
+      validationMessages.push('You may only have at most one of each policy type.');
+      validation = false;
+    }
+    // Validate CPG if more than 1 policy
+    if (policyTypes.length > 1 && !policyTypes.includes(PolicyType.choose_policy_group)) {
+      validationMessages.push('You must use Choose Policy Group if you have more than one policy.');
+      validation = false;
+    }
     // Validate Policies
     for (const policy of this.state.policies) {
       switch (policy.policy) {
         case PolicyType.choose_policy_group:
-          const params = policy.parameters as ChoosePolicyGroupParameters;
+          const paramsCPG = policy.parameters as ChoosePolicyGroupParameters;
           let probabilitySums = 0;
-          for (const option of Object.values(params.policy_options)) {
+          for (const option of Object.values(paramsCPG.policy_options)) {
             probabilitySums += option;
           }
           if (probabilitySums != 1) {
@@ -99,10 +149,14 @@ export default class MOOCletCreator extends Component<Props, State> {
           }
           break;
         case PolicyType.ts_configurable:
-          // TODO
+          const paramsTSConfig = policy.parameters as TSConfigurableParameters;
+          if (paramsTSConfig.min_rating && paramsTSConfig.min_rating >= paramsTSConfig.max_rating) {
+            validationMessages.push('Min rating must be lower than max rating.');
+            validation = false;
+          }
           break;
         case PolicyType.thompson_sampling_contextual:
-          // TODO
+          // const paramsTSContext = policy.parameters as ThompsonSamplingContextualParameters;
           break;
       }
     }
@@ -143,8 +197,21 @@ export default class MOOCletCreator extends Component<Props, State> {
           outcome_variable_name: 'unknown',
         };
         break;
-      // case PolicyType.thompson_sampling_contextual:
-      //   break;
+      case PolicyType.thompson_sampling_contextual:
+        policyFragment.parameters = {
+          coef_cov: [[]] as number[][],
+          coef_mean: [] as number[],
+          batch_size: 1,
+          variance_a: 2,
+          variance_b: 1,
+          action_space: {},
+          outcome_variable: 'unknown',
+          include_intercept: true,
+          uniform_threshold: 1,
+          regression_formula: '',
+          contextual_variables: [],
+        };
+        break;
     }
     this.setState({});
   };
@@ -179,10 +246,30 @@ export default class MOOCletCreator extends Component<Props, State> {
             break;
         }
         break;
-      // case PolicyType.thompson_sampling_contextual:
-      //   const tsContextualParams = policyFragment.parameters as ThompsonSamplingContextualParameters;
-      //   switch (target.name) {
-      //   }
+      case PolicyType.thompson_sampling_contextual:
+        const tsContextualParams = policyFragment.parameters as ThompsonSamplingContextualParameters;
+        switch (target.name) {
+          case 'batch_size':
+            tsContextualParams.batch_size = parseInt(target.value);
+            break;
+          case 'variance_a':
+            tsContextualParams.variance_a = parseFloat(target.value);
+            break;
+          case 'variance_b':
+            tsContextualParams.variance_b = parseFloat(target.value);
+            break;
+          case 'action_space':
+            break;
+          case 'outcome_variable':
+            tsContextualParams.outcome_variable = target.value;
+            break;
+          case 'include_intercept':
+            tsContextualParams.include_intercept = target.checked;
+            break;
+          case 'uniform_threshold':
+            tsContextualParams.uniform_threshold = parseInt(target.value);
+            break;
+        }
     }
     // Debug:
     // this.setState({}, () => console.log(policyFragment));
@@ -320,7 +407,7 @@ export default class MOOCletCreator extends Component<Props, State> {
                 label="TS PostDiff Thresh (Optional)"
                 InputProps={{
                   inputProps: {
-                    min: 0.00001,
+                    min: 0.00001, //TODO: ask about this
                     step: 0.00001,
                     max: 0.99999,
                   },
@@ -332,7 +419,6 @@ export default class MOOCletCreator extends Component<Props, State> {
               <TextField
                 className="policy-menu-item"
                 required
-                type="string"
                 name="outcome_variable_name"
                 label="Outcome Variable Name"
                 onChange={(e) => this.updatePolicyParams(e, policyFragment)}
@@ -344,8 +430,68 @@ export default class MOOCletCreator extends Component<Props, State> {
       case PolicyType.thompson_sampling_contextual:
         return (
           <div className="policy-menu ts-contextual-menu">
-            {/* <TextField className="policy-menu-item" /> */}
-            <p> This policy is currently not supported. </p>
+            <TextField
+              className="policy-menu-item"
+              required
+              type="number"
+              name="batch_size"
+              label="Batch Size"
+              InputProps={{
+                inputProps: {
+                  min: 1,
+                  step: 1,
+                },
+              }}
+              onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+            />
+            <TextField
+              className="policy-menu-item"
+              required
+              type="number"
+              name="variance_a"
+              label="Variance A"
+              onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+            />
+            <TextField
+              className="policy-menu-item"
+              required
+              type="number"
+              name="variance_b"
+              label="Variance B"
+              onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+            />
+            <TextField
+              className="policy-menu-item"
+              required
+              name="outcome_variable"
+              label="Outcome Variable"
+              onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  className="policy-menu-item"
+                  defaultChecked
+                  name="include_intercept"
+                  onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+                />
+              }
+              label="Include Intercept"
+            />
+            <TextField
+              className="policy-menu-item"
+              required
+              type="number"
+              name="uniform_threshold"
+              label="Uniform Threshold"
+              InputProps={{
+                inputProps: {
+                  min: 0,
+                  step: 1,
+                },
+              }}
+              onChange={(e) => this.updatePolicyParams(e, policyFragment)}
+            />
           </div>
         );
         break;
@@ -394,7 +540,14 @@ export default class MOOCletCreator extends Component<Props, State> {
                   <MenuItem value={PolicyType.thompson_sampling_contextual}>Thompson Sampling Contextual</MenuItem>
                   <MenuItem value={PolicyType.ts_configurable}>TS Configurable</MenuItem>
                 </Select>
-                <Button color="error" onClick={() => this.removePolicy(policy)}>
+                <Button
+                  color="error"
+                  onClick={() => {
+                    this.setState({
+                      policies: this.state.policies.filter((p) => p !== policy),
+                    });
+                  }}
+                >
                   <Close />
                 </Button>
                 {this.renderPolicy(policy)}
@@ -422,17 +575,93 @@ export default class MOOCletCreator extends Component<Props, State> {
             </Tooltip>
           </div>
           <h2>Variables</h2>
+          {this.state.variables.map((variable) => {
+            return (
+              <div key={uid(variable)} className="new-mooclet-form-section">
+                <TextField
+                  required
+                  className="variable"
+                  name="variable_name"
+                  label="Variable Name"
+                  onChange={(e) => {
+                    const vars = this.state.variables;
+                    const index = this.state.variables.indexOf(variable);
+                    vars[index].name = e.target.value;
+                    this.setState({
+                      variables: vars,
+                    });
+                  }}
+                />
+                <Button
+                  color="error"
+                  onClick={() => {
+                    this.setState({
+                      variables: this.state.variables.filter((v) => v !== variable),
+                    });
+                  }}
+                >
+                  <Close />
+                </Button>
+              </div>
+            );
+          })}
           <div className="new-mooclet-form-section">
             <Tooltip title="Add new variable">
-              <Button>
+              <Button
+                onClick={() => {
+                  const vars = this.state.variables;
+                  vars.push({ name: '' });
+                  this.setState({
+                    variables: vars,
+                  });
+                }}
+              >
                 <Add />
               </Button>
             </Tooltip>
           </div>
           <h2>Versions</h2>
+          {this.state.versions.map((version) => {
+            return (
+              <div key={uid(version)} className="new-mooclet-form-section">
+                <TextField
+                  required
+                  className="version"
+                  name="version_name"
+                  label="Version Name"
+                  onChange={(e) => {
+                    const vers = this.state.versions;
+                    const index = this.state.versions.indexOf(version);
+                    vers[index].name = e.target.value;
+                    this.setState({
+                      versions: vers,
+                    });
+                  }}
+                />
+                <Button
+                  color="error"
+                  onClick={() => {
+                    this.setState({
+                      versions: this.state.versions.filter((v) => v !== version),
+                    });
+                  }}
+                >
+                  <Close />
+                </Button>
+              </div>
+            );
+          })}
           <div className="new-mooclet-form-section">
             <Tooltip title="Add new version">
-              <Button>
+              <Button
+                onClick={() => {
+                  const vers = this.state.versions;
+                  vers.push({ name: '' });
+                  this.setState({
+                    versions: vers,
+                  });
+                }}
+              >
                 <Add />
               </Button>
             </Tooltip>
