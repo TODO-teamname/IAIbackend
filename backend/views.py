@@ -160,19 +160,19 @@ def process_variable_values(request):
 
 
 def download_data(request):
+    #TODO: (For D3) stop using dummies
     #TODO: Reformat file
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
-        token = str(request.query_params.get('mooclet_token'))
-        url = str(request.query_params.get('mooclet_url'))
     except (AttributeError, requests.HTTPError) as e:
         # NOTE: We eventually want to stop using this, but use for testing.
         print("Error: " + str(e))
         print("Using dummy values")
         mooclet_id = 25
-        token = MOOCLET_API_TOKEN
-        url = URL
         #return HttpResponseBadRequest(e)
+
+    token = MOOCLET_API_TOKEN
+    url = URL
 
 
     try:
