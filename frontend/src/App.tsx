@@ -3,9 +3,17 @@ import React from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import './App.css';
 import MOOCletView from './Components/MOOCletView/MOOCletView';
+import Login from './Components/Login/Login';
 import Preferences from './Components/Preferences/Preferences';
+import useToken from './Components/useToken';
 
 function App(): JSX.Element {
+  const { token, setToken } = useToken();
+  //alert(token);
+  if (!token) {
+    return <Login setToken={setToken} />;
+  }
+
   return (
     <div className="app-wrapper">
       <h1>Application</h1>
