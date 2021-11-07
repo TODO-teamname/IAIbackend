@@ -173,14 +173,18 @@ def download_data(request):
 
     try:
         mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
-        data = mooclet_connector.get_values()
     except requests.HTTPError as e:
         return HttpResponseBadRequest(e, headers=RES_FRONTEND_HEADERS)
 
     tfile = tempfile.NamedTemporaryFile(mode="w+")
 
     a = MoocletPipeline(mooclet_connector)
-    a.get_output(tfile)
+
+    try:
+        a.get_output(tfile)
+    except requests.HTTPError as e:
+        return HttpResponseBadRequest(e, headers=RES_FRONTEND_HEADERS)
+
     filename = f"{mooclet_id}.csv"
 
     response = HttpResponse(tfile, content_type="text/csv", headers=RES_FRONTEND_HEADERS)
