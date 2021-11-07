@@ -87,31 +87,42 @@ export default class MOOCletCreator extends Component<Props, State> {
       const mooclet_url = BASE_URL + 'mooclet/?policy_id=' + policy + '&mooclet_name=' + this.state.moocletName;
       console.log(this.state.policies);
       console.log('Submitting new MOOClet', mooclet_url);
+      // TODO: Refactor this
       axios.post(mooclet_url).then(
         (res) => {
           console.log(res);
+          // POST policies
+          for (const policy of this.state.policies) {
+            const policy_url = BASE_URL + 'policyparameters/?mooclet_id=' + res.data.id + '&policy_id=' + policy.policy;
+            // axios.post(policy_url).then(
+            //   (res) => console.log(res),
+            //   (err) => console.log(err),
+            // );
+          }
+
+          // POST versions
+          for (const version of this.state.versions) {
+            const version_url = BASE_URL + 'versions/?mooclet_id=' + res.data.id + '&version_name=' + version.name;
+            // axios.post(version_url).then(
+            //   (res) => console.log(res),
+            //   (err) => console.log(err),
+            // );
+          }
+
+          // POST variables
+          for (const variable of this.state.variables) {
+            const variable_url = BASE_URL + 'variables/?mooclet_id=' + res.data.id + '&variable_name=' + variable.name;
+            // axios.post(variable_url).then(
+            //   (res) => console.log(res),
+            //   (err) => console.log(err),
+            // );
+          }
           this.props.submitCallback(res.data.id);
         },
         (err) => {
           console.log(err);
         },
       );
-
-      // POST policies
-      for (const policy of this.state.policies) {
-        // const policy_url = BASE_URL + ''
-        // TODO: POST policy
-      }
-
-      // POST versions
-      for (const version of this.state.versions) {
-        // TODO: POST version
-      }
-
-      // POST variables
-      for (const variable of this.state.variables) {
-        // TODO: POST variable
-      }
     }
   };
 
@@ -156,7 +167,10 @@ export default class MOOCletCreator extends Component<Props, State> {
           }
           break;
         case PolicyType.thompson_sampling_contextual:
-          // const paramsTSContext = policy.parameters as ThompsonSamplingContextualParameters;
+          validationMessages.push(
+            'Thompson Sampling Contextual is currently not supported. Please select another policy.',
+          );
+          validation = false;
           break;
       }
     }
@@ -674,7 +688,6 @@ export default class MOOCletCreator extends Component<Props, State> {
         </form>
         <div className="alert-container">
           {this.state.showAlert ? (
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
             <Alert
               severity="error"
               onClose={() => {
