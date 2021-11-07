@@ -115,10 +115,9 @@ class MoocletConnector:
     def get_values(self) -> Dict:  # for getting variable values
         return self._mooclet_get_call("value")
 
-    def create_value(self, variable_name, initial_value):
+    def create_value(self, variable_name):
         data = {
             "variable": variable_name,
-            "value": initial_value,
             "mooclet": self.mooclet_id
         }
         return self._mooclet_post_call("value", data=data)
