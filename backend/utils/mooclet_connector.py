@@ -83,7 +83,15 @@ class MoocletConnector:
         if headers == None:
             headers = {'Authorization': f'Token {self.token}'}
 
-        return _mooclet_get_call(url, params=params, headers=headers)
+        results = _mooclet_get_call(url, params=params, headers=headers)
+        page = results
+
+        while ("next" in page.keys() and page["next"] != None):
+            page = _mooclet_get_call(url=results['next'], params=params, headers=headers)
+            results["results"] += page["results"]
+
+        return results
+
 
     def _mooclet_post_call(self, endpoint, data, headers=None, url=None) -> Dict:
         if url == None:
