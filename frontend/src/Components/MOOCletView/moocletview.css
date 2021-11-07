@@ -1,0 +1,22 @@
+.moocletview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.existing-mooclets-wrapper {
+  /* border: 0.2rem solid black; */
+  border-radius: 0.5rem;
+  margin: 1rem;
+  padding: 1rem;
+}
+
+.existing-mooclets-wrapper h1 {
+  margin: 0 0 1rem;
+}
+
+.existing-mooclets {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
