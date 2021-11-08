@@ -19,6 +19,7 @@ import AddToDriveIcon from '@mui/icons-material/AddToDrive';
 import axios from 'axios';
 import DataView from '../DataView/DataView';
 import { useHistory } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const BASE_URL = 'http://127.0.0.1:8000/api/';
 
@@ -43,15 +44,20 @@ export default function MOOCletDashboard(): JSX.Element {
   const handleRoute = (pagePath: string) => {
     history.push(pagePath);
   };
-  const [currentDataName, setCurrentDataName] = React.useState('');
-  const [currentDataPolicy, setCurrentDataPolicy] = React.useState(0);
+  const [currentDataName, setCurrentDataName] = React.useState<string>('');
+  const [currentDataPolicy, setCurrentDataPolicy] = React.useState<number>(0);
 
   const handleSubmit = (e: React.MouseEvent<HTMLElement>): void => {
     console.log('clicked button');
     e.preventDefault();
     axios.get(BASE_URL + 'mooclet/?mooclet_id=' + '106').then((res) => {
-      setCurrentDataName(res.data.name);
-      setCurrentDataPolicy(res.data.policy);
+      console.log(res.data.name, res.data.policy);
+      setCurrentDataName(currentDataName + res.data.name);
+      setCurrentDataPolicy(() => res.data.policy);
+      // React.useEffect(() => {
+      //   setCurrentDataName(res.data.name);
+      // }, [res.data.name]);
+      console.log(currentDataName, currentDataPolicy);
     });
   };
 
