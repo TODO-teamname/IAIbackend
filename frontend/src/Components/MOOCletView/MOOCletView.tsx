@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { uid } from 'react-uid';
-import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
+// import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
 import './moocletview.css';
 import axios from 'axios';
 import { MOOClet } from '../../types';
@@ -93,7 +93,7 @@ export default class MOOCletView extends Component<Props, State> {
       <div className="moocletview-wrapper">
         <div className="moocletview">
           {this.renderMOOClets()}
-          <MOOCletCreator submitCallback={this.addMOOClet} />
+          {/* <MOOCletCreator submitCallback={this.addMOOClet} /> */}
         </div>
       </div>
     );

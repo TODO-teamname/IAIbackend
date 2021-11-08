@@ -27,7 +27,7 @@ const BASE_URL = 'http://127.0.0.1:8000/api/';
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Props {
   // eslint-disable-next-line no-unused-vars
-  submitCallback: (arg0: number) => void;
+  submitCallback: (arg0: string, arg1: number) => void;
 }
 
 interface PolicyFragment {
@@ -117,7 +117,9 @@ export default class MOOCletCreator extends Component<Props, State> {
             //   (err) => console.log(err),
             // );
           }
-          this.props.submitCallback(res.data.id);
+          axios.get(BASE_URL + 'mooclet/?mooclet_id=' + res.data.id).then((res) => {
+            this.props.submitCallback(res.data.name, res.data.policy);
+          });
         },
         (err) => {
           console.log(err);
@@ -128,7 +130,7 @@ export default class MOOCletCreator extends Component<Props, State> {
 
   validateNewMOOClet = (): boolean => {
     let validation = true;
-    const validationMessages = [];
+    const validationMessages: string[] = [];
     // Validate that there is at least one policy
     if (this.state.policies.length <= 0) {
       validationMessages.push('You must have at least one policy.');
