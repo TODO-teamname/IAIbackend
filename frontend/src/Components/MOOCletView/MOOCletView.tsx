@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { uid } from 'react-uid';
-import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
+// import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
 import './moocletview.css';
 import axios from 'axios';
 import { MOOClet } from '../../types';

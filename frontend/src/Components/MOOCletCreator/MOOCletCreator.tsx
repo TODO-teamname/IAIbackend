@@ -130,7 +130,7 @@ export default class MOOCletCreator extends Component<Props, State> {
 
   validateNewMOOClet = (): boolean => {
     let validation = true;
-    const validationMessages = [];
+    const validationMessages: string[] = [];
     // Validate that there is at least one policy
     if (this.state.policies.length <= 0) {
       validationMessages.push('You must have at least one policy.');
