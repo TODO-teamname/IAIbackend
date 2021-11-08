@@ -1,15 +1,20 @@
 import { Component } from 'react';
 import { Button } from '@mui/material';
 import './dataview.css';
+import { isPropertySignature } from 'typescript';
 
 interface Props {
   moocletID: number;
-  organizationId: number;
+  organizationID: number;
+  moocletName: string;
+  moocletPolicy: number;
 }
 
 interface State {
   moocletID: number;
-  organizationId: number;
+  organizationID: number;
+  moocletName: string;
+  moocletPolicy: number;
 }
 
 export default class DataView extends Component<Props, State> {
@@ -17,7 +22,9 @@ export default class DataView extends Component<Props, State> {
     super(props);
     this.state = {
       moocletID: props.moocletID,
-      organizationId: props.organizationId,
+      organizationID: props.organizationID,
+      moocletName: props.moocletName,
+      moocletPolicy: props.moocletPolicy,
     };
   }
 
@@ -36,21 +43,21 @@ export default class DataView extends Component<Props, State> {
 
   renderMOOCletDetails = (): JSX.Element => {
     const details = {
-      name: 'Dummy Name',
-      id: this.state.moocletID,
-      environment: 'This is a dummy environment',
-      policy: 0,
+      moocletName: this.state.moocletName,
+      moocletID: this.state.moocletID,
+      organizationID: this.state.organizationID,
+      policy: this.state.moocletPolicy,
     };
     return (
       <div className="details-wrapper">
         <p>
-          This is the dataview for your MOOClet with <i>id</i> {details.id}. Here are its details:{' '}
+          This is the dataview for your MOOClet with <i>id</i> {details.moocletID}. Here are its details:{' '}
         </p>
         <p>
-          The <i>name</i> is: {details.name}
+          The <i>name</i> is: {details.moocletName}
         </p>
         <p>
-          The <i>environment</i> is: {details.environment}
+          The <i>organizationID</i> is: {details.organizationID}
         </p>
         <p>
           The <i>policy</i> is: {details.policy}
@@ -63,10 +70,10 @@ export default class DataView extends Component<Props, State> {
     // in this section we need to call the API to figure out these details
     return (
       <div className="dataview-wrapper">
-        <div className="details-wrapper">{this.renderMOOCletDetails()}</div>
         <h1>Your MOOClet Data</h1>
-        <div className="download-wrapper">{this.renderDownloadButton()}</div>
-        <p></p>
+        <div className="details-wrapper">{this.renderMOOCletDetails()}</div>
+        {/* <div className="download-wrapper">{this.renderDownloadButton()}</div>
+        <p></p> */}
       </div>
     );
   }
