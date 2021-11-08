@@ -141,7 +141,7 @@ export default function Dashboard(): JSX.Element {
             open={Boolean(settingsAnchorEl)}
             onClose={handleSettingsClose}
           >
-            <MenuItem onClick={() => handleRoute('/mooclet')}>Add MOOClet</MenuItem>
+            {/* <MenuItem onClick={() => handleRoute('/mooclet')}>Add MOOClet</MenuItem> */}
             <MenuItem onClick={handleSettingsClose}>Add Person</MenuItem>
           </Menu>
         </div>
