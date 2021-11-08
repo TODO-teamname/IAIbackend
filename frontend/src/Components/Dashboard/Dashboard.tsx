@@ -14,11 +14,28 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import { CardActionArea } from '@mui/material';
 import { useHistory } from 'react-router-dom';
+import MOOCletCreator from '../MOOCletCreator/MOOCletCreator';
+import { uid } from 'react-uid';
+
+interface MOOCletInfo {
+  name: string;
+  policy: number;
+}
 
 export default function Dashboard(): JSX.Element {
   const [auth] = React.useState(true);
   const [accountAnchorEl, setAccountAnchorEl] = React.useState<null | HTMLElement>(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [MOOClets, setMOOClets] = React.useState<MOOCletInfo[]>([
+    {
+      name: 'MHA - November',
+      policy: 6,
+    },
+    {
+      name: 'MHA - October',
+      policy: 12,
+    },
+  ]);
 
   // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   //   setAuth(event.target.checked);
@@ -135,32 +152,23 @@ export default function Dashboard(): JSX.Element {
         <h3>People</h3>
       </div>
       <div style={{ display: 'flex', alignItems: 'start' }}>
-        <Card sx={{ maxWidth: '25%', marginLeft: '1%', marginRight: '1%' }}>
-          <CardActionArea onClick={() => handleRoute('/moocletdashboard')}>
-            <CardMedia component="img" height="140" image="logo192.png" alt="green iguana" />
-            <CardContent>
-              <Typography gutterBottom variant="h5" component="div">
-                MHA - October
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                This is the MOOClet titled MHA - October.
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
-        <Card sx={{ maxWidth: '25%', marginRight: '20%' }}>
-          <CardActionArea>
-            <CardMedia component="img" height="140" image="logo192.png" alt="green iguana" />
-            <CardContent>
-              <Typography gutterBottom variant="h5" component="div">
-                MHA - November
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                This is the MOOClet titled MHA - November.
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
+        {MOOClets.map((MOOCletInfo) => {
+          return (
+            <Card key={uid(MOOCletInfo)} sx={{ maxWidth: '25%', marginLeft: '1%', marginRight: '1%' }}>
+              <CardActionArea onClick={() => handleRoute('/moocletdashboard')}>
+                <CardMedia component="img" height="140" image="logo192.png" alt="green iguana" />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {MOOCletInfo.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Policy: {MOOCletInfo.policy}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          );
+        })}
         <Card sx={{ maxWidth: '15%', marginRight: '1%', display: 'flex' }}>
           <CardMedia component="img" sx={{ width: '50%' }} image="logo192.png" />
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -188,6 +196,11 @@ export default function Dashboard(): JSX.Element {
           </Box>
         </Card>
       </div>
+      <MOOCletCreator
+        submitCallback={(name: string, policy: number) => {
+          setMOOClets((oldArray) => [...oldArray, { name: name, policy: policy }]);
+        }}
+      />
     </>
   );
 }

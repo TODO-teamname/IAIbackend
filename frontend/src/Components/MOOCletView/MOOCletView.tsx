@@ -93,7 +93,7 @@ export default class MOOCletView extends Component<Props, State> {
       <div className="moocletview-wrapper">
         <div className="moocletview">
           {this.renderMOOClets()}
-          <MOOCletCreator submitCallback={this.addMOOClet} />
+          {/* <MOOCletCreator submitCallback={this.addMOOClet} /> */}
         </div>
       </div>
     );
