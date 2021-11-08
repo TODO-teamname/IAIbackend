@@ -1,0 +1,59 @@
+.mooclet-creator {
+  /* border: 0.2rem solid black; */
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+  padding: 1rem;
+  /* box-shadow: 0.5rem 0.5rem 0.5rem; */
+}
+
+.mooclet-creator h1 {
+  margin: 0 0 1rem;
+}
+
+.new-mooclet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.new-mooclet-form h2 {
+  margin: 0;
+}
+
+.new-mooclet-form-section {
+  display: flex;
+  flex-direction: row;
+  /* flex-wrap: wrap; */
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+.policy-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.policy-menu-item {
+  width: 20rem;
+}
+
+.bottom-border {
+  border-bottom: 1px solid black;
+}
+
+.policy-select {
+  width: 20rem;
+  background-color: lightblue;
+}
+
+.alert-container {
+  position: fixed;
+  opacity: 90%;
+  margin: 1rem;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+}
