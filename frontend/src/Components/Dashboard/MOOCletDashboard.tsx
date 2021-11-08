@@ -16,6 +16,11 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import DownloadIcon from '@mui/icons-material/Download';
 import AddToDriveIcon from '@mui/icons-material/AddToDrive';
+import axios from 'axios';
+import DataView from '../DataView/DataView';
+import { useHistory } from 'react-router-dom';
+
+const BASE_URL = 'http://127.0.0.1:8000/api/';
 
 export default function MOOCletDashboard(): JSX.Element {
   const [currentSelection, setCurrentSelection] = React.useState('Please select a MOOClet');
@@ -32,6 +37,22 @@ export default function MOOCletDashboard(): JSX.Element {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+  const history = useHistory();
+
+  const handleRoute = (pagePath: string) => {
+    history.push(pagePath);
+  };
+  const [currentDataName, setCurrentDataName] = React.useState('');
+  const [currentDataPolicy, setCurrentDataPolicy] = React.useState(0);
+
+  const handleSubmit = (e: React.MouseEvent<HTMLElement>): void => {
+    console.log('clicked button');
+    e.preventDefault();
+    axios.get(BASE_URL + 'mooclet/?mooclet_id=' + '106').then((res) => {
+      setCurrentDataName(res.data.name);
+      setCurrentDataPolicy(res.data.policy);
+    });
   };
 
   const drawerWidth = '15%';
@@ -79,7 +100,7 @@ export default function MOOCletDashboard(): JSX.Element {
                   onClose={handleClose}
                 >
                   <MenuItem onClick={handleClose}>My Account</MenuItem>
-                  <MenuItem onClick={handleClose}>Sign Out</MenuItem>
+                  <MenuItem onClick={() => handleRoute('/login')}>Sign Out</MenuItem>
                 </Menu>
                 <Menu
                   id="menu-appbar"
@@ -114,19 +135,21 @@ export default function MOOCletDashboard(): JSX.Element {
           <Toolbar />
           <Box sx={{ overflow: 'auto' }}>
             <List>
-              <ListItem button onClick={() => setCurrentSelection('MHA - October')}>
-                <ListItemText primary={'MHA - October'} />
-              </ListItem>
-            </List>
-            <Divider />
-            <List>
-              <ListItem button onClick={() => setCurrentSelection('MHA - November')}>
-                <ListItemText primary={'MHA - November'} />
+              <ListItem button onClick={(e) => handleSubmit(e)}>
+                <ListItemText primary={'MOOClet'} />
               </ListItem>
             </List>
             <Divider />
           </Box>
         </Drawer>
+        <div style={{ marginLeft: '17%', marginTop: '5%' }}>
+          <DataView
+            moocletID={106}
+            organizationID={0}
+            moocletName={currentDataName}
+            moocletPolicy={currentDataPolicy}
+          />
+        </div>
         <Drawer
           variant="permanent"
           anchor="right"

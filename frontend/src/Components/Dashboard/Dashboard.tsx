@@ -100,7 +100,7 @@ export default function Dashboard(): JSX.Element {
                 onClose={handleAccountClose}
               >
                 <MenuItem onClick={handleAccountClose}>My Account</MenuItem>
-                <MenuItem onClick={handleAccountClose}>Sign Out</MenuItem>
+                <MenuItem onClick={() => handleRoute('/login')}>Sign Out</MenuItem>
               </Menu>
             </div>
           )}
@@ -148,13 +148,13 @@ export default function Dashboard(): JSX.Element {
       </div>
       <br style={{ clear: 'both' }} />
       <div style={{ display: 'flex' }}>
-        <h3 style={{ marginLeft: '1%', marginRight: '50%' }}>Studies/MOOClets</h3>
+        <h3 style={{ marginLeft: '1%', marginRight: '50%' }}>MOOClets</h3>
         <h3>People</h3>
       </div>
       <div style={{ display: 'flex', alignItems: 'start' }}>
         {MOOClets.map((MOOCletInfo) => {
           return (
-            <Card key={uid(MOOCletInfo)} sx={{ maxWidth: '25%', marginLeft: '1%', marginRight: '1%' }}>
+            <Card key={uid(MOOCletInfo)} sx={{ width: '15%', marginLeft: '1%', marginRight: '1%' }}>
               <CardActionArea onClick={() => handleRoute('/moocletdashboard')}>
                 <CardMedia component="img" height="140" image="logo192.png" alt="green iguana" />
                 <CardContent>
@@ -169,7 +169,7 @@ export default function Dashboard(): JSX.Element {
             </Card>
           );
         })}
-        <Card sx={{ maxWidth: '15%', marginRight: '1%', display: 'flex' }}>
+        <Card sx={{ maxWidth: '15%', marginRight: '1%', marginLeft: '23%', display: 'flex' }}>
           <CardMedia component="img" sx={{ width: '50%' }} image="logo192.png" />
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <CardContent sx={{ flex: '1 0 auto' }}>
