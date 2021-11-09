@@ -12,8 +12,8 @@ requests = "*"
 djangorestframework = "*"
 pandas = "*"
 gunicorn = "*"
-psycopg-binary = "*"
 django-heroku = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
