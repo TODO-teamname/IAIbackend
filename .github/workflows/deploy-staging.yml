@@ -12,6 +12,6 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "our-covid-api-staging"
+          heroku_app_name: "IAI-app-backend-staging"
           heroku_email: "jordan.han@mail.utoronto.ca"
 
