@@ -11,6 +11,9 @@ Django = "==3.2.8"
 requests = "*"
 djangorestframework = "*"
 pandas = "*"
+gunicorn = "*"
+psycopg-binary = "*"
+django-heroku = "*"
 
 [dev-packages]
 
