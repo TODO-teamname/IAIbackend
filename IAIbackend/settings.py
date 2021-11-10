@@ -30,6 +30,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1']
 
 
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,11 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'backend.apps.BackendConfig',
     'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -128,5 +132,10 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ORIGIN_WHITELIST = [
+    'https://localhost:3000',
+    'https://iai-app.herokuapp.com',
+]
 
 django_heroku.settings(locals())
