@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-e40$g)7yxs2%#f*m9pz!)=-ikt1l16_$n9sdm*j$t!3^*))x0&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'www.iai-app-backend-staging.herokuapp.com', 'www.iai-app-backend.herokuapp.com']
 
 
 
