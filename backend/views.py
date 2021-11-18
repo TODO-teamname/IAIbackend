@@ -20,8 +20,6 @@ from .utils.DataPipelines.MoocletPipeline import MoocletPipeline
 MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
 URL = mooclet_connector.DUMMY_MOOCLET_URL
 
-RES_FRONTEND_HEADERS = {'Access-Control-Allow-Origin': 'http://localhost:3000'}
-
 
 # call external api to create and get mooclet basic inof from IAI's MOOClet server
 @api_view(('GET', 'POST'))
@@ -45,7 +43,7 @@ def process_mooclet(request):
                       )
             mooclet.save()
             print("mooclet saved to django db")
-            return Response(mooclet_data, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+            return Response(mooclet_data, status=status.HTTP_200_OK)
 
     elif request.method == "POST":
         params = {"policy": int(str(request.query_params.get('policy_id'))),
@@ -68,7 +66,7 @@ def process_mooclet(request):
                       )
             mooclet.save()
             print("new mooclet saved to django db")
-            return Response(mooclet_data, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+            return Response(mooclet_data, status=status.HTTP_201_CREATED)
 
 
 # call external api to create & get policy parameters for a given mooclet_id
@@ -92,7 +90,7 @@ def process_policy_parameters(request):
         try:
             policy_params_data = mooclet_connector.get_policy_parameters()
             # TODO: add policy parameter field to Django model Mooclet() & seed here
-            return Response(policy_params_data, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+            return Response(policy_params_data, status=status.HTTP_200_OK)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
@@ -113,7 +111,7 @@ def process_policy_parameters(request):
         try:
             policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, parameters)
             # TODO: add policy parameter field to Django model Mooclet() & seed here
-            return Response(policy_params_object_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+            return Response(policy_params_object_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
@@ -138,7 +136,7 @@ def process_variables(request):
     if request.method == "GET":
         try:
             variables_values = mooclet_connector.get_values()
-            return Response(variables_values, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+            return Response(variables_values, status=status.HTTP_200_OK)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
@@ -154,7 +152,7 @@ def process_variables(request):
             # create variable
             variable_created = mooclet_connector.create_variable(variable_name)
             temporary_value = mooclet_connector.create_value(variable_name)  # TODO: remove; don't manually create value
-            return Response(variable_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+            return Response(variable_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
@@ -178,7 +176,7 @@ def process_versions(request):
     if request.method == 'GET':
         try:
             versions = mooclet_connector.get_versions()
-            return Response(versions, status=status.HTTP_200_OK, headers=RES_FRONTEND_HEADERS)
+            return Response(versions, status=status.HTTP_200_OK)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
     elif request.method == 'POST':
@@ -190,7 +188,7 @@ def process_versions(request):
 
         try:
             version_created = mooclet_connector.create_versions(version_name)
-            return Response(version_created, status=status.HTTP_201_CREATED, headers=RES_FRONTEND_HEADERS)
+            return Response(version_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
@@ -213,7 +211,7 @@ def download_data(request):
     try:
         mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
     except requests.HTTPError as e:
-        return HttpResponseBadRequest(e, headers=RES_FRONTEND_HEADERS)
+        return HttpResponseBadRequest(e)
 
     tfile = tempfile.NamedTemporaryFile(mode="w+")
 
@@ -222,11 +220,11 @@ def download_data(request):
     try:
         a.get_output(tfile)
     except requests.HTTPError as e:
-        return HttpResponseBadRequest(e, headers=RES_FRONTEND_HEADERS)
+        return HttpResponseBadRequest(e)
 
     filename = f"{mooclet_id}.csv"
 
-    response = HttpResponse(tfile, content_type="text/csv", headers=RES_FRONTEND_HEADERS)
+    response = HttpResponse(tfile, content_type="text/csv")
     response['Content-Dispostion'] = "attachment; filename=%s" % filename
 
     return response
