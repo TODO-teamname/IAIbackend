@@ -7,4 +7,4 @@ from .models import Mooclet
 class MoocletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mooclet
-        fields = ('id', 'mooclet_name', 'mooclet_id', 'policy_id')
+        fields = ('study', 'external_id')
