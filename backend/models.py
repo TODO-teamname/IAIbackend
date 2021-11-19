@@ -22,7 +22,7 @@ class Organization(models.Model):
 class Membership(models.Model):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    permission = models.CharField(null=False, choices=PERMISSION_LEVELS)
+    permission = models.CharField(null=False, choices=PERMISSION_LEVELS,  max_length=5)
     dateRegistered = models.DateField(null=False)
 
 class Study(models.Model):
