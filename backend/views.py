@@ -36,13 +36,6 @@ def process_mooclet(request):
         else:
             mooclet_data = objects.json()
             print("obtained mooclet data: ", mooclet_data)
-            # seed to Django DB
-            mooclet = Mooclet(mooclet_name=mooclet_data['name'],
-                              mooclet_id=mooclet_data['id'],
-                              policy_id=mooclet_data['policy'],
-                      )
-            mooclet.save()
-            print("mooclet saved to django db")
             return Response(mooclet_data, status=status.HTTP_200_OK)
 
     elif request.method == "POST":
@@ -59,13 +52,13 @@ def process_mooclet(request):
         else:
             mooclet_data = objects.json()
             print("created mooclet in IAI's server: ", mooclet_data)
-            # seed to Django DB
-            mooclet = Mooclet(mooclet_name=mooclet_data['name'],
-                              mooclet_id=mooclet_data['id'],
-                              policy_id=mooclet_data['policy'],
-                      )
-            mooclet.save()
-            print("new mooclet saved to django db")
+            # # TODO: write to DB
+            # mooclet = Mooclet(
+            #     study=...
+            #     external_id=mooclet_data['id']
+            #           )
+            # mooclet.save()
+            # print("new mooclet saved to django db")
             return Response(mooclet_data, status=status.HTTP_201_CREATED)
 
 
