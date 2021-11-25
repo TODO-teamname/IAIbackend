@@ -5,26 +5,37 @@ import pandas as pd
 import numpy as np
 from typing import Dict, TextIO
 
+# TODO: remove external api call
+### USE THIS API TOKEN WITH CARE ###
+from .. import mooclet_connector
+import requests
+MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
+URL = mooclet_connector.DUMMY_MOOCLET_URL
+
+
 class MoocletPipeline(DataPipeline):
     def __init__(self, mooclet_connector: MoocletConnector, var_names: Dict):
         super().__init__(mooclet_connector)
         self.mooclet_connector = mooclet_connector
-        self.var_names = var_names  
-        # e.g. var_names = {"reward": "mturk_ts_reward_round_24", "policy": 6}
+        self.var_names = var_names  # e.g. {"reward": "mturk_ts_reward_round_8", "policy": 6}
         
         self.intermediate_data = {}  # Dict[str, pd.DataFrame]
         self.output_data = None
+        print("*********", self.var_names)
 
 
-    def _parse_data(self):
-        values = pd.DataFrame(self.values["results"])
-        values["timestamp"] = pd.to_datetime(values["timestamp"])
-        values.sort_values(by=["timestamp"])
-        self.output_data = values
+    # def _parse_data(self):
+    #     values = pd.DataFrame(self.values["results"])
+    #     values["timestamp"] = pd.to_datetime(values["timestamp"])
+    #     values.sort_values(by=["timestamp"])
+    #     self.output_data = values
 
 
     def get_output(self, file: TextIO=None):
-        self._parse_data()
+        self.step_1_obtain_all_mooclet_data()
+        self.step_2_combine_data()
+        self.step_3_add_parameters_updates()
+        self.step_4_add_timestamp_filters()
 
         if not file:
             return self.output_data
@@ -40,11 +51,11 @@ class MoocletPipeline(DataPipeline):
     def step_1_obtain_all_mooclet_data(self):
         # endpoints = ["mooclet", "values", "versions", "policyparameters", "policyparametershistory", "policy"]
         
-        raw_mooclet = self.mooclet_connector.get_mooclet()  # TODO: error check
-        raw_mooclet = pd.DataFrame.from_records(raw_mooclet["results"])[["id", "name"]]
-        self.intermediate_data["mooclet"] = raw_mooclet  # not being used again
+        # raw_mooclet = self.mooclet_connector.get_mooclet()  
+        # raw_mooclet = pd.DataFrame.from_records(raw_mooclet, index=[0])[["id", "name"]]
+        # self.intermediate_data["mooclet"] = raw_mooclet  # not being used again
         
-        raw_values = self.mooclet_connector.get_values()
+        raw_values = self.mooclet_connector.get_values()  # TODO: error check
         raw_values = pd.DataFrame.from_records(raw_values["results"])
         raw_values = raw_values.sort_values(by=["learner", "timestamp"])
         raw_values = raw_values.drop_duplicates(subset=["learner", "timestamp"])
@@ -55,12 +66,19 @@ class MoocletPipeline(DataPipeline):
         self.intermediate_data["rewards"] = raw_values[raw_values["variable"] == self.var_names["reward"]]  # extracting rows from values table where it's for reward value
 
         raw_policy_parameters = self.mooclet_connector.get_policy_parameters()
+        raw_policy_parameters = pd.DataFrame.from_records(raw_policy_parameters["results"])
         self.intermediate_data["policy_parameters"] = raw_policy_parameters[raw_policy_parameters["policy"] == self.var_names["policy"]]
         
         raw_policy_parameters_history = self.mooclet_connector.get_policy_parameters_history()
+        raw_policy_parameters_history = pd.DataFrame.from_records(raw_policy_parameters_history["results"])
         self.intermediate_data["policy_parameters_history"] = raw_policy_parameters_history.sort_values(by=["creation_time"])
 
         # self.intermediate_data["policies"] = get_policies()
+        # TODO: remove external api call
+        url = URL + "policy"
+        objects = requests.get(url, headers={'Authorization': f'Token {MOOCLET_API_TOKEN}'})
+        raw_policies = objects.json()
+        self.intermediate_data["policies"] = pd.DataFrame.from_records(raw_policies["results"])
 
         self.intermediate_data["learners"] = sorted(raw_values["learner"].unique())
         
@@ -73,11 +91,11 @@ class MoocletPipeline(DataPipeline):
     def step_2_combine_data(self):
         rewards = self.intermediate_data["rewards"]
         versions = self.intermediate_data["versions"]
-        parameters = self.intermediate_data["parameters"]
+        parameters = self.intermediate_data["policy_parameters"]
         all_draws = self.intermediate_data["draws"]
         prec_draws = all_draws["precesion_draw"]
         coef_draws = all_draws["coef_draw"]
-        parametershistory = self.intermediate_data["parameterhistory"]
+        parametershistory = self.intermediate_data["policy_parameters_history"]
 
         rows = []
         for learner in self.intermediate_data["learners"]:
@@ -132,7 +150,7 @@ class MoocletPipeline(DataPipeline):
             batch_groups_list.index)
         self.output_data = combined_df
 
-    def step_3_add_parameters_updates(self, var_names):
+    def step_3_add_parameters_updates(self):
         df = self.output_data
         df["index"] = df.index
         df["coef_mean_updated"] = repr(0)
@@ -141,7 +159,6 @@ class MoocletPipeline(DataPipeline):
         df["variance_b_updated"] = np.NaN
         df["update_size_updated"] = np.NaN
         df["batch_group_updated"] = np.NaN
-        learners = self.mooclet_data["learner"]
         obs_record = {}
         for i in df["batch_group"].unique():
             obs = df[df["batch_group"] == i]
@@ -158,16 +175,16 @@ class MoocletPipeline(DataPipeline):
             if "update_record" not in obs:
                 continue
             for dict in obs["update_record"].values[0]:
-                round_no = var_names["reward"].split("_")[-1]
+                round_no = self.var_names["reward"].split("_")[-1]
                 arm_text = self.intermediate_data[
                                "version_json"] + f"_round_{round_no}"
                 # df  -> df_learner -> df_learner_arm_value -> df_reward_value
                 record = df[df["batch_group"] == i]
-                record = record[record["learner"] == get_learner_name_by_id(learners, int(dict["user_id"]))]
+                record = record[record["learner"] == get_learner_name_by_id(int(dict["user_id"]))]
                 record = record[
                     record[self.intermediate_data["version_json"]] == dict[
                         arm_text]]
-                record = record[record["reward"] == dict[var_names["reward"]]]
+                record = record[record["reward"] == dict[self.var_names["reward"]]]
                 if record.shape[0] > 1:
                     record = record.head(1)
                 if record.size > 0:
@@ -261,13 +278,11 @@ def get_version_by_version_id(versions, v_id):
         return None
 
 
-def get_learner_name_by_id(learners, learner_id):
-    # url = f"https://mooclet.canadacentral.cloudapp.azure.com/engine/api/v1/learner/{learner_id}"
-    # objects = requests.get(url, headers={'Authorization': f'Token {MOOCLET_API_TOKEN}'})
-    # return objects.json()["name"]
-
-    # TODO: implement external api call for get_learner(learner_id)
-    return None
+def get_learner_name_by_id(learner_id):
+    # TODO: move external api call
+    url = URL + "learner/" + str(learner_id)
+    objects = requests.get(url, headers={'Authorization': f'Token {MOOCLET_API_TOKEN}'})
+    return objects.json()["name"]
 
 
 def get_valid_contextual_values(contextuals, timestamp):
@@ -305,12 +320,11 @@ def get_valid_groups(groups, timestamp, v_id):
 # TODO: implement external api calls
 # TODO: modify current workflow of writing to csv according to the following code:
 
+
+
 # usage notes to be modified:
 #     mooclet_id = [52]
-    # var_names = {
-    #     "reward": "mturk_ts_reward_round_24",
-    #     "parameterpolicy": 6
-    # }
+
     # mturk_datapipeline = MturkDataPipeline(mooclet_id, True)
     # mturk_datapipeline(var_names)
 
