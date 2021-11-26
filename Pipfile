@@ -17,6 +17,9 @@ psycopg2-binary = "*"
 django-cors-headers = "*"
 djangorestframework-simplejwt = "*"
 drf-nested-routers = "*"
+python-dotenv = "*"
+django-environ = "*"
+dj-database-url = "*"
 
 [dev-packages]
 
