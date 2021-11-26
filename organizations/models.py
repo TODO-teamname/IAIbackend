@@ -15,7 +15,7 @@ class Organization(TimeStampMixin):
     token = models.CharField(max_length=100)
     url = models.CharField(max_length=200)
     name = models.CharField(max_length=100, null=False)
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership')
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='organizations')
 
     def __str__(self):
         return self.name

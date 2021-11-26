@@ -3,13 +3,13 @@ from rest_framework_nested import routers
 
 from .views import OrganizationViewSet, MembersViewSet
 
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 router.register(r'organizations', OrganizationViewSet)
 
-members_router = routers.NestedSimpleRouter(router, r'organizations', lookup='organization')
-members_router.register(r'members', MembersViewSet, basename='organization-members')
+organizations_router = routers.NestedSimpleRouter(router, r'organizations', lookup='organization')
+organizations_router.register(r'members', MembersViewSet, basename='members')
 
 urlpatterns = [
     path(r'', include(router.urls)),
-    path(r'', include(members_router.urls)),
+    path(r'', include(organizations_router.urls)),
 ]

@@ -1,29 +1,34 @@
-from rest_framework import serializers
+from rest_framework import serializers, validators
+from django.contrib.auth import get_user_model
+
 
 from organizations.models import Organization, Membership
 
 class MembershipSerializer(serializers.ModelSerializer):
-    user_id = serializers.ReadOnlyField(source='user.id')
-    organization_id = serializers.ReadOnlyField(source='organization.id')
+    name = serializers.ReadOnlyField(source='user.get_full_name', required=False)
+    user = serializers.SlugRelatedField(queryset=get_user_model().objects.all(), slug_field = 'email')
 
     def create(self, validated_data):
-        self.organization.members.add(user, through_defaults={'permission_level': permission_level})
-        return organization
+        if Membership.objects.filter(user = validated_data["user"], organization = validated_data["organization_id"]).exists():
+            raise serializers.ValidationError("message: That user is already a member of this organization.")
+
+        membership = super(MembershipSerializer, self).create(validated_data)
+        return membership
 
     class Meta:
         model = Membership
-        fields = ['user_id', 'organization_id', 'permission_level']
-    
+        fields = ['id', 'user', 'organization', 'name', 'permission_level']
+        extra_kwargs= {
+            'organization': {'write_only': True,
+                             'required': False},
+        }
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    creator = serializers.ReadOnlyField(source='user.id', required=False)
-
     def create(self, validated_data):
-        creator = validated_data.pop('creator')
-        organization = Organization.objects.create(**validated_data)
-        organization.members.add(creator, through_defaults={'permission_level': "ADMIN"})
+        organization = super(OrganizationSerializer, self).create(validated_data)
+        organization.members.add(self.context['request'].user, through_defaults={'permission_level': "ADMIN"})
         return organization
 
     class Meta:
         model=Organization
-        fields = ['id', 'token', 'url', 'name', 'creator']
+        fields = ['id', 'token', 'url', 'name']
