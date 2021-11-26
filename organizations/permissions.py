@@ -4,7 +4,7 @@ from .models import Organization, Membership
 
 def _is_member(user, organization):
     try:
-        membership = Membership.objects.get(user=user, organization=organization.id)
+        Membership.objects.get(user=user, organization=organization.id)
     except:
         return False
 
@@ -49,7 +49,6 @@ class MembershipPermissions(permissions.BasePermission):
     edit_methods = ("POST", "PUT", "PATCH")
 
     def has_permission(self, request, view):
-        # TODO: figure out permissions!!!
         user = request.user
         organization = Organization.objects.get(pk=view.kwargs["organization_pk"])
 
@@ -57,7 +56,7 @@ class MembershipPermissions(permissions.BasePermission):
             return True
 
         elif _is_member(user, organization):
-            if request.method in self.view_methods:
+            if request.method in self.view_methods or request.method == "DELETE":
                 return True
 
         return False
@@ -71,17 +70,15 @@ class MembershipPermissions(permissions.BasePermission):
             return True
 
         if _is_admin(user, organization):
-            # an admin can remove themselves or demote themselves, unless they are the last admin.
-            if obj.user == user:
-                if request.method == "DELETE" or request.method == "PUT" and request.data["permission_level"] != "ADMIN":
-                    if organization.members.filter(permission_level = "ADMIN").count() == 1:
-                        return False
-                    return True
+            # an admin can only remove themselves or demote themselves, unless they are the last admin.
+            if obj.user == user: 
+                if request.method == "DELETE" or (request.method == "PATCH" and request.data["permission_level"] != "ADMIN"):
+                    self.message = {"user": "There must be at least one administrator in this organization."}
+                    return organization.membership_set.filter(permission_level = "ADMIN").count() > 1
 
             # an admin cannot remove/modify other admins
             else: 
                 return obj.permission_level != "ADMIN"
-
         elif _is_member(user, organization):
             # a regular user should be able to leave an organization
             if obj.user == user and request.method == "DELETE":

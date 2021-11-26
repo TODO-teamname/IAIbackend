@@ -23,7 +23,7 @@ class Organization(TimeStampMixin):
 class Membership(TimeStampMixin):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    permission_level = models.CharField(max_length=100, choices=PERMISSION_LEVELS)
+    permission_level = models.CharField(max_length=100, choices=PERMISSION_LEVELS, default='STAFF')
 
     def __str__(self):
         return '%s: %s' % (self.user, self.permission_level)

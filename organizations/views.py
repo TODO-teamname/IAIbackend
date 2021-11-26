@@ -1,8 +1,5 @@
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from organizations.models import Organization, Membership
 from organizations.serializers import OrganizationSerializer, MembershipSerializer
 from organizations.permissions import OrganizationPermissions, MembershipPermissions
@@ -16,7 +13,7 @@ class OrganizationViewSet(mixins.ListModelMixin,
 
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = [OrganizationPermissions]
+    permission_classes = [IsAuthenticated, OrganizationPermissions]
 
     def get_queryset(self):
         return Organization.objects.filter(members=self.request.user)
@@ -29,7 +26,7 @@ class MembersViewSet(mixins.CreateModelMixin,
 
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
-    permission_classes = [MembershipPermissions]
+    permission_classes = [IsAuthenticated, MembershipPermissions]
 
     def get_queryset(self):
         return Membership.objects.filter(organization_id=self.kwargs['organization_pk'])
