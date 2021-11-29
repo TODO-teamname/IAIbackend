@@ -191,11 +191,17 @@ def download_data(request):
     #TODO: Reformat file
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
+        var_names = str(request.query_params.get('var_names'))
+        
     except (AttributeError, requests.HTTPError) as e:
         # NOTE: We eventually want to stop using this, but use for testing.
         print("Error: " + str(e))
         print("Using dummy values")
         mooclet_id = 25
+        var_names = {
+            "reward": "mturk_ts_reward_round_8",
+            "policy": 6
+        }
         #return HttpResponseBadRequest(e)
 
     token = MOOCLET_API_TOKEN
@@ -208,7 +214,7 @@ def download_data(request):
 
     tfile = tempfile.NamedTemporaryFile(mode="w+")
 
-    a = MoocletPipeline(mooclet_connector)
+    a = MoocletPipeline(mooclet_connector, var_names)
 
     try:
         a.get_output(tfile)
