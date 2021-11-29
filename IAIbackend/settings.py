@@ -84,7 +84,15 @@ WSGI_APPLICATION = 'IAIbackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {'default': dj_database_url.config(default='postgres://postgres:postgres@localhost:5433/csc301_local')}
+if os.environ.get('DJANGO_DEVELOPMENT'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+else:
+    DATABASES = {'default': dj_database_url.config(default='postgres://postgres:postgres@localhost:5433/csc301_local')}
 
 
 # Password validation
