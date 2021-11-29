@@ -18,7 +18,10 @@ from .utils.DataPipelines.MoocletPipeline import MoocletPipeline
 ### USE THIS API TOKEN WITH CARE ###
 MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
 URL = mooclet_connector.DUMMY_MOOCLET_URL
-class InternalMoocletViewSet(viewsets.ViewSet):
+#class InternalMoocletViewSet(viewsets.ViewSet):
+class MoocletCreator(viewsets.GenericViewSet):
+    permissoin_classes = []
+        
 
 class MoocletViewSet(viewsets.ModelViewSet):
     queryset = Mooclet.objects.all()
