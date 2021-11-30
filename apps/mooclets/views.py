@@ -108,22 +108,15 @@ def process_policy_parameters(request):
             return HttpResponseBadRequest(e)
 
     elif request.method == "POST":  # given mooclet_id and policy_id
-        # TODO: also requires specifying policy params in POST req
         # pre-condition: the mooclet must have been created already
         try:
             policy_id = int(str(request.query_params.get('policy_id')))
-            parameters = {
-                "policy_options": {
-                    "uniform_random": 0.0,
-                    "ts_configurable": 1.0
-                }
-            }
+            policy_parameters = request.query_params.get('policy_parameters')  # json string
         except (AttributeError, requests.HTTPError) as e:
             print("Error: gave wrong parameters: check policy_id or parameters")
             print(str(e))
         try:
-            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, parameters)
-            # TODO: add policy parameter field to Django model Mooclet() & seed here
+            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, policy_parameters)
             return Response(policy_params_object_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
@@ -195,26 +188,24 @@ def process_versions(request):
     elif request.method == 'POST':
         try:
             version_name = str(request.query_params.get('version_name'))
+            version_json = request.query_params.get('version_json')  # json string
         except (AttributeError, requests.HTTPError) as e:
             print("Error: gave wrong parameters: check version_name")
             return HttpResponseBadRequest(e)
 
         try:
-            version_created = mooclet_connector.create_versions(version_name)
+            version_created = mooclet_connector.create_versions(version_name, version_json)
             return Response(version_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
 
 def download_data(request):
-    #TODO: (For D3) stop using dummies
-    #TODO: Reformat file
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
     except (AttributeError, requests.HTTPError) as e:
         # NOTE: We eventually want to stop using this, but use for testing.
         print("Error: " + str(e))
-        print("Using dummy values")
         mooclet_id = 25
         #return HttpResponseBadRequest(e)
 
