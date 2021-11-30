@@ -14,3 +14,4 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "iai-app-backend"
           heroku_email: "jordan.han@mail.utoronto.ca"
+          
