@@ -7,18 +7,38 @@ import tempfile # used for downloader
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, renderer_classes
-from rest_framework import generics
-from .models import Mooclet
-from .serializers import MoocletSerializer
+from rest_framework import generics, viewsets
+from mooclets.models import Mooclet
+from mooclets.serializers import MoocletSerializer
+from rest_framework.permissions import IsAuthenticated
+from organizations.permissions import OrganizationPermissions
 
-from .utils.mooclet_connector import MoocletConnector, MoocletCreator
-from .utils import mooclet_connector
-from .utils.DataPipelines.MoocletPipeline import MoocletPipeline
+from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
+from mooclets.utils import mooclet_connector
+from mooclets.utils.DataPipelines.MoocletPipeline import MoocletPipeline
 
 
 ### USE THIS API TOKEN WITH CARE ###
 MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
 URL = mooclet_connector.DUMMY_MOOCLET_URL
+#class InternalMoocletViewSet(viewsets.ViewSet):
+        
+
+class MoocletViewSet(viewsets.GenericViewSet):
+    queryset = Mooclet.objects.all()
+    serializer_class = MoocletSerializer
+    permission_classes = [IsAuthenticated, MoocletPermissions]
+
+    """
+    def get_versions(self, request, pk=None):
+        try:
+            version_name = str(request.query_params.get('version_name'))
+            version_created = mooclet_connector.create_versions(version_name)
+            return Response(version_created, status=status.HTTP_201_CREATED)
+        except (AttributeError, requests.HTTPError) as e:
+            print("Error: gave wrong parameters: check version_name")
+            return HttpResponseBadRequest(e)
+    """
 
 
 # call external api to create and get mooclet basic inof from IAI's MOOClet server
@@ -191,17 +211,11 @@ def download_data(request):
     #TODO: Reformat file
     try:
         mooclet_id = str(request.query_params.get('mooclet_id'))
-        var_names = str(request.query_params.get('var_names'))
-        
     except (AttributeError, requests.HTTPError) as e:
         # NOTE: We eventually want to stop using this, but use for testing.
         print("Error: " + str(e))
         print("Using dummy values")
         mooclet_id = 25
-        var_names = {
-            "reward": "mturk_ts_reward_round_8",
-            "policy": 6
-        }
         #return HttpResponseBadRequest(e)
 
     token = MOOCLET_API_TOKEN
@@ -214,7 +228,7 @@ def download_data(request):
 
     tfile = tempfile.NamedTemporaryFile(mode="w+")
 
-    a = MoocletPipeline(mooclet_connector, var_names)
+    a = MoocletPipeline(mooclet_connector)
 
     try:
         a.get_output(tfile)
