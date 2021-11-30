@@ -121,11 +121,11 @@ class MoocletConnector:
     def get_policy_parameters(self) -> Dict:
         return self._mooclet_get_call("policyparameters")
 
-    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
+    def create_policy_parameters(self, policy_id: int, policy_parameters: Dict) -> Dict:
         data = {
             "mooclet": self.mooclet_id,
             "policy": policy_id,
-            "parameters": json.dumps(parameters)
+            "parameters": policy_parameters
         }
         return self._mooclet_post_call("policyparameters", data=data)
 

@@ -92,18 +92,12 @@ def process_policy_parameters(request):
         # pre-condition: the mooclet must have been created already
         try:
             policy_id = int(str(request.query_params.get('policy_id')))
-            parameters = {
-                "policy_options": {
-                    "uniform_random": 0.0,
-                    "ts_configurable": 1.0
-                }
-            }
+            policy_parameters = request.query_params.get('policy_parameters')  # json string
         except (AttributeError, requests.HTTPError) as e:
             print("Error: gave wrong parameters: check policy_id or parameters")
             print(str(e))
         try:
-            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, parameters)
-            # TODO: add policy parameter field to Django model Mooclet() & seed here
+            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, policy_parameters)
             return Response(policy_params_object_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
