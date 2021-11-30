@@ -1,3 +1,4 @@
+from sys import version
 import requests
 import json
 from typing import Dict
@@ -110,10 +111,11 @@ class MoocletConnector:
     def get_versions(self) -> Dict:
         return self._mooclet_get_call("version")
 
-    def create_versions(self, version_name: str) -> Dict:
+    def create_versions(self, version_name: str, version_json: str) -> Dict:
         data = {
             "mooclet": self.mooclet_id,
-            "name": version_name
+            "name": version_name,
+            "version_json": version_json
         }
 
         return self._mooclet_post_call("version", data=data)
@@ -121,11 +123,11 @@ class MoocletConnector:
     def get_policy_parameters(self) -> Dict:
         return self._mooclet_get_call("policyparameters")
 
-    def create_policy_parameters(self, policy_id: int, parameters: Dict) -> Dict:
+    def create_policy_parameters(self, policy_id: int, policy_parameters: str) -> Dict:
         data = {
             "mooclet": self.mooclet_id,
             "policy": policy_id,
-            "parameters": json.dumps(parameters)
+            "parameters": policy_parameters
         }
         return self._mooclet_post_call("policyparameters", data=data)
 
