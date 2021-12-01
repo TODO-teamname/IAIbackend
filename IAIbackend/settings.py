@@ -156,10 +156,24 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+CORS_ALLOWED_ORIGINS = [
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://iai-app.herokuapp.com',
+    'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
+]
 CORS_ORIGIN_WHITELIST = [
     'https://localhost:3000',
-    'https://iai-frontend.herokuapp.com', 
+    'http://localhost:3000',
+    'https://iai-app.herokuapp.com',
     'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
+]
 django_heroku.settings(locals())
