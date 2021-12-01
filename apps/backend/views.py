@@ -169,12 +169,13 @@ def process_versions(request):
         try:
             version_name = str(request.query_params.get('version_name'))
             version_json = request.query_params.get('version_json')  # json string
+            version_text = str(request.query_params.get('version_text'))
         except (AttributeError, requests.HTTPError) as e:
             print("Error: gave wrong parameters: check version_name")
             return HttpResponseBadRequest(e)
 
         try:
-            version_created = mooclet_connector.create_versions(version_name, version_json)
+            version_created = mooclet_connector.create_versions(version_name, version_json, version_text)
             return Response(version_created, status=status.HTTP_201_CREATED)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)

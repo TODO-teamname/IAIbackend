@@ -111,11 +111,12 @@ class MoocletConnector:
     def get_versions(self) -> Dict:
         return self._mooclet_get_call("version")
 
-    def create_versions(self, version_name: str, version_json: str) -> Dict:
+    def create_versions(self, version_name: str, version_json: str, version_text: str) -> Dict:
         data = {
             "mooclet": self.mooclet_id,
             "name": version_name,
-            "version_json": version_json
+            "version_json": version_json,
+            "text": version_text
         }
 
         return self._mooclet_post_call("version", data=data)
