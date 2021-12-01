@@ -1,9 +1,9 @@
 from django.db import models
 from django.conf import settings
-from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models.signals import post_save
 from commons.models import TimeStampMixin
-
+from mooclets.models import MoocletAuthenticator
 
 PERMISSION_LEVELS = (
     ("ADMIN", "admin"),
@@ -13,7 +13,7 @@ PERMISSION_LEVELS = (
 class Organization(TimeStampMixin):
     # Note: maybe implement encryption? Also not THAT important. What is more important is that the server is secure.
     token = models.CharField(max_length=100)
-    url = models.CharField(max_length=200)
+    url = models.URLField(max_length=200)
     name = models.CharField(max_length=100, null=False)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='organizations')
 
@@ -32,5 +32,3 @@ class Membership(TimeStampMixin):
         constraints = [
             models.UniqueConstraint(fields=['user', 'organization'], name='unique_membership')
         ]
-
-    

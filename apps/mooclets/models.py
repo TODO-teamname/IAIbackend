@@ -1,30 +1,66 @@
+from typing import List
 from django.db import models
-from commons.models import TimeStampMixin
-from organizations.models import Organization
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from rest_framework.permissions import BasePermissionMetaclass, IsAuthenticated
+from django.core.exceptions import FieldError
+from .utils.mooclet_connector import MoocletConnector
+class MoocletAuthenticator(models.Model):
+    class Meta:
+        abstract = True
 
-PERMISSION_LEVELS = (
-    ("ADMIN", "admin"),
-    ("STAFF", "staff")
-)
+    def get_url(self) -> str:
+        raise NotImplementedError
 
-"""
-# Class that handles everything non-authentication related.
-class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    secondary_email = models.EmailField(null=True)
+    def get_token(self) -> str:
+        raise NotImplementedError
 
-# Hooks up profile so that it is created when a user is created.
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-"""
+    def get_permission_classes(self) -> List[BasePermissionMetaclass]:
+        raise NotImplementedError
+
+class BasicMoocletAuthenticator(MoocletAuthenticator):
+    url = models.URLField()
+    token = models.CharField(max_length=200)
+
+    def get_url(self):
+        return self.url
+
+    def get_token(self):
+        return self.token
+
+    def get_permission_classes(self) -> List[BasePermissionMetaclass]:
+        return [IsAuthenticated]
+
 
 class Mooclet(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    external_id = models.IntegerField(null=False)
+    external_id = models.IntegerField(blank=False)
+    name = models.CharField(max_length=200)
+
+    # for abstraction
+    authenticator_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
+    authenticator_id = models.PositiveIntegerField()
+    authenticator_object = GenericForeignKey('authenticator_type', 'authenticator_id')
+
+    def save(self, *args, **kwargs):
+        if not isinstance(self.authenticator_object, MoocletAuthenticator):
+            raise FieldError("Tried to use an invalid authenticator!")
+        super().save(*args, **kwargs)
+
+    @property
+    def url(self) -> str:
+        return self.authenticator_object.get_url()
+
+    @property
+    def token(self) -> str:
+        return self.authenticator_object.get_token()
+
+    def get_connector(self) -> MoocletConnector:
+        return MoocletConnector(mooclet_id = self.external_id, url = self.url, token = self.token)
+
+    def get_permission_classes(self) -> List[BasePermissionMetaclass]:
+        return self.authenticator_object.get_permission_classes()
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['organization', 'external_id'], name='unique_mooclet')
+            models.UniqueConstraint(fields=['authenticator_id', 'external_id'], name='unique_mooclet')
         ]

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'organizations',
+    'organization_mooclets',
     'mooclets',
 ]
 

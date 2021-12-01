@@ -1,12 +1,11 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from organizations.views import OrganizationViewSet, MembersViewSet
-from organizations.urls import organizations_router
+from .views import MoocletViewSet
 
-
-organizations_router.register(r'mooclets', MembersViewSet, basename='mooclets')
+router = routers.DefaultRouter()
+router.register(r'organizations', MoocletViewSet)
 
 urlpatterns = [
-    path(r'', include(organizations_router.urls)),
+        path(r'', include(router.urls))
 ]

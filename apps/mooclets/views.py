@@ -4,14 +4,13 @@ from django.http.response import HttpResponse, HttpResponseBadRequest
 import requests
 import datetime
 import tempfile # used for downloader
-from rest_framework import status
+from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, renderer_classes
-from rest_framework import generics, viewsets
-from mooclets.models import Mooclet
-from mooclets.serializers import MoocletSerializer
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated
-from organizations.permissions import OrganizationPermissions
+
+from mooclets.models import Mooclet
+from mooclets.serializers import MoocletSerializer, VersionSerializer
 
 from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
 from mooclets.utils import mooclet_connector
@@ -24,22 +23,51 @@ URL = mooclet_connector.DUMMY_MOOCLET_URL
 #class InternalMoocletViewSet(viewsets.ViewSet):
         
 
-class MoocletViewSet(viewsets.GenericViewSet):
+class MoocletViewSet(generics.RetrieveAPIView,
+                     viewsets.GenericViewSet):
     queryset = Mooclet.objects.all()
     serializer_class = MoocletSerializer
-    permission_classes = [IsAuthenticated, MoocletPermissions]
 
-    """
-    def get_versions(self, request, pk=None):
-        try:
-            version_name = str(request.query_params.get('version_name'))
-            version_created = mooclet_connector.create_versions(version_name)
-            return Response(version_created, status=status.HTTP_201_CREATED)
-        except (AttributeError, requests.HTTPError) as e:
-            print("Error: gave wrong parameters: check version_name")
-            return HttpResponseBadRequest(e)
-    """
+    permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        permission_set = set(self.permission_classes)
+
+        if self.detail == True:
+            print("detail")
+            mooclet_permissions = self.get_object().get_permissions()
+            permission_set |= set(mooclet_permissions)
+
+        return [permission() for permission in permission_set]
+    """
+    @action(detail=False, methods=['post'])
+    def create_mooclet(self, request):
+        #Creates an external mooclet and adds it to the local database
+        serializer = CreateExternalMoocletSerializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        mooclet = serializer.create()
+
+        if mooclet:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True)
+    def version(self, request, pk=None):
+        mooclet = self.get_object()
+        serializer = VersionSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            versions = mooclet.connector.get_versions()
+            return versions
+
+    @versions.mapping.post
+    def update_versions(self, request, pk=None):
+        mooclet = self.get_object()
+        serializer = VersionSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            version_created = mooclet.connector.create_versions(version_name)
+            return version_created
+    """
 
 # call external api to create and get mooclet basic inof from IAI's MOOClet server
 @api_view(('GET', 'POST'))

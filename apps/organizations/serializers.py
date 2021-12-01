@@ -50,3 +50,5 @@ class MembershipSerializer(serializers.ModelSerializer):
                              'required': False},
             'permission_level': {'required': False},
         }
+
+
