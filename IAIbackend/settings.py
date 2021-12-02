@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'iai-app-backend-staging.herokuapp.com', 'iai-app-backend.herokuapp.com', 'iai-app.herokuapp.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'iai-app-backend-staging.herokuapp.com', 'iai-app-backend.herokuapp.com', 'iai-frontend.herokuapp.com', 'iai-frontend-staging.herokuapp.com']
 
 
 # Application definition
@@ -156,9 +156,24 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+CORS_ALLOWED_ORIGINS = [
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://iai-app.herokuapp.com',
+    'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
+]
 CORS_ORIGIN_WHITELIST = [
     'https://localhost:3000',
+    'http://localhost:3000',
     'https://iai-app.herokuapp.com',
+    'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://iai-frontend-staging.herokuapp.com',
+    'https://iai-frontend.herokuapp.com',
+]
 django_heroku.settings(locals())
