@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import action
@@ -55,7 +56,7 @@ class OrganizationMoocletViewSet(mixins.CreateModelMixin,
         mooclet_authenticator = organization.mooclet_authenticator
         mooclet_creator = mooclet_authenticator.get_mooclet_creator()
         policy_id = int(request.data["policy_id"])
-        mooclet_name = request.data["mooclet_name"]
+        mooclet_name = request.data["mooclet_name"] + str(datetime.datetime.now())
         mooclet_data = mooclet_creator.create_mooclet(policy=policy_id, name=mooclet_name)
         Mooclet.objects.create(external_id=mooclet_data["id"], content_object=mooclet_authenticator)
         return Response(mooclet_data, status=status.HTTP_201_CREATED)
