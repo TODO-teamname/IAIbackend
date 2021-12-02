@@ -16,7 +16,7 @@ POLICY_NAME_TO_ID = {"thompson_sampling_contextual": 6,
 def mooclet_call(method, **kwargs):
     try:
         response = method(**kwargs)
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError:
         raise ServiceUnavailable(detail='Service unavailable, check your url or try again later.')
 
     status_code = response.status_code
@@ -38,6 +38,7 @@ class ExternalServerConnector:
         # Probably should use library for joining urls, but don't have time to learn that
         if self.url[-1] != "/":
             self.url = self.url + "/"
+        # Could use check_server, but not doing it here to reduce number of external calls
 
     def get_authorization_header(self):
         return {'Authorization': f'Token {self.token}'}
@@ -50,24 +51,21 @@ class ExternalServerConnector:
         response = mooclet_call(requests.head, **kwargs)
         return response
 
-
 class MoocletCreator(ExternalServerConnector):
-    def __init__(self, token, url, mooclet_name, policy_name):
+    def __init__(self, token, url):
         super().__init__(token=token, url=url)
-        self.mooclet_name = mooclet_name
-        self.policy_name = policy_name
 
-    def create_mooclet(self) -> Dict:
-        endpoint = "mooclet"
-        url = self.url + endpoint,
+    def create_mooclet(self, name: str, policy: int) -> Dict:
+        url = self.url + "mooclet",
 
-        data = {"policy": POLICY_NAME_TO_ID[self.policy_name],  # policy id
-                  "name": self.mooclet_name}
+        data = {"policy": policy,  # policy id
+                  "name": name}
+
         headers = self.get_authorization_header()
+        timeout = 20
 
-        kwargs = {'url': url, 'data': data, 'headers': headers}
+        kwargs = {'url': url, 'data': data, 'headers': headers, 'timeout': timeout}
 
-        #results = _mooclet_get_call(url, params=params, headers=headers)
         response = mooclet_call(requests.post, **kwargs)
         return response.json()
 
