@@ -1,79 +1,83 @@
-from sys import version
 import requests
-import json
-from typing import Dict
+from typing import Dict, List
+from commons.exceptions import ServiceUnavailable, ProxyAuthenticationRequired, ExternalResourceNotFound
+import os
+from django.conf import settings
 
 # never use this token to perform any Delete requests
 # never use the token outside of this file
-DUMMY_MOOCLET_API_TOKEN = "db071db130485666bfd39ac15b9dc1eb9d75f9cc"
-DUMMY_MOOCLET_URL = "https://mooclet.canadacentral.cloudapp.azure.com/engine/api/v1/"
+DUMMY_MOOCLET_API_TOKEN = os.getenv("DUMMY_MOOCLET_API_TOKEN")
+DUMMY_MOOCLET_URL = settings.DEFAULT_MOOCLET_URL
 
 POLICY_NAME_TO_ID = {"thompson_sampling_contextual": 6,
                      "choose_policy_group": 12,
                      "ts_configurable": 17}
 
-
-def _mooclet_get_call(url, params={}, headers={}) -> Dict:
-    objects = requests.get(
-        url = url,
-        params = params,
-        headers = headers
-    )
-
+def mooclet_call(method, **kwargs):
     try:
-        objects.raise_for_status()
-    except requests.HTTPError as e:
-        print("error message: ", objects.json())
-        print("Error: " + str(e))
-        raise
+        response = method(**kwargs)
+    except requests.exceptions.ConnectionError as e:
+        raise ServiceUnavailable(detail='Service unavailable, check your url or try again later.')
 
-    return objects.json()
+    status_code = response.status_code
 
+    if status_code == 401:
+        raise ProxyAuthenticationRequired()
+    if status_code == 404:
+        print(kwargs)
+        raise ExternalResourceNotFound('That mooclet does not exist on the external server')
 
-def _mooclet_post_call(url, data={}, headers={}) -> Dict:
-    objects = requests.post(
-        url=url,
-        data=data,
-        headers=headers
-    )
+    response.raise_for_status()
 
-    try:
-        objects.raise_for_status()
-    except requests.HTTPError as e:
-        print("error message: ", objects.json())
-        print("Error: " + str(e))
-        raise
+    return response
 
-    return objects.json()
-
-
-class MoocletCreator:
-    def __init__(self, token, url, mooclet_name, policy_name):
+class ExternalServerConnector:
+    def __init__(self, token, url):
         self.token = token
         self.url = url
+        # Probably should use library for joining urls, but don't have time to learn that
+        if self.url[-1] != "/":
+            self.url = self.url + "/"
+
+    def get_authorization_header(self):
+        return {'Authorization': f'Token {self.token}'}
+
+    def check_server(self):
+        url = self.url
+        headers = {'Authorization': f'Token {self.token}'}
+
+        kwargs = {'url': url, 'headers': headers}
+        response = mooclet_call(requests.head, **kwargs)
+        return response
+
+
+class MoocletCreator(ExternalServerConnector):
+    def __init__(self, token, url, mooclet_name, policy_name):
+        super().__init__(token=token, url=url)
         self.mooclet_name = mooclet_name
         self.policy_name = policy_name
 
     def create_mooclet(self) -> Dict:
         endpoint = "mooclet"
         url = self.url + endpoint,
+
         data = {"policy": POLICY_NAME_TO_ID[self.policy_name],  # policy id
                   "name": self.mooclet_name}
-        headers = {'Authorization': f'Token {self.token}'}
+        headers = self.get_authorization_header()
 
-        return _mooclet_post_call(url, data=data, headers=headers)
+        kwargs = {'url': url, 'data': data, 'headers': headers}
+
+        #results = _mooclet_get_call(url, params=params, headers=headers)
+        response = mooclet_call(requests.post, **kwargs)
+        return response.json()
 
 
-class MoocletConnector:
+class MoocletConnector(ExternalServerConnector):
     def __init__(self, mooclet_id, token, url):
-        self.token = token
-        self.url = url
+        super().__init__(token=token, url=url)
+
         self.mooclet_id = mooclet_id
 
-        try:
-            self.get_mooclet()
-        except requests.HTTPError as e:
-            raise e
 
     def _mooclet_get_call(self, endpoint, params=None, headers=None, url=None) -> Dict:
         if url == None:
@@ -83,13 +87,19 @@ class MoocletConnector:
             params = {"mooclet": self.mooclet_id}
 
         if headers == None:
-            headers = {'Authorization': f'Token {self.token}'}
+            headers = self.get_authorization_header()
 
-        results = _mooclet_get_call(url, params=params, headers=headers)
+        kwargs = {'url': url, 'params': params, 'headers': headers}
+
+        #results = _mooclet_get_call(url, params=params, headers=headers)
+        response = mooclet_call(requests.get, **kwargs)
+        results = response.json()
+
         page = results
 
         while ("next" in page.keys() and page["next"] != None):
-            page = _mooclet_get_call(url=results['next'], params=params, headers=headers)
+            kwargs['url'] = results['next']
+            page = mooclet_call(requests.get, **kwargs).json()
             results["results"] += page["results"]
 
         return results
@@ -100,13 +110,37 @@ class MoocletConnector:
             url = self.url + endpoint
 
         if headers == None:
-            headers = {'Authorization': f'Token {self.token}'}
+            headers = self.get_authorization_header()
 
-        return _mooclet_post_call(url, data=data, headers=headers)
+        kwargs = {'url': url, 'data': data, 'headers': headers}
 
-    def get_mooclet(self) -> Dict:
+        #results = _mooclet_get_call(url, params=params, headers=headers)
+        response = mooclet_call(requests.post, **kwargs)
+        return response.json()
+
+    def check_mooclet(self):
+        url = self.url + "mooclet"
+        params = {"mooclet": self.mooclet_id}
+        headers = self.get_authorization_header()
+
+        kwargs = {'url': url, 'params': params, 'headers': headers}
+        response = mooclet_call(requests.head, **kwargs)
+
+        return response
+
+    def get_mooclet(self, fields: List[str]=None):
         url = self.url + "mooclet/" + str(self.mooclet_id)
-        return self._mooclet_get_call("mooclet", url=url)
+        data = self._mooclet_get_call("mooclet", url=url)
+
+        if not fields:
+            return data
+
+        ret = {}
+
+        for field in fields:
+            ret[field] = data[field]
+
+        return ret
 
     def get_versions(self) -> Dict:
         return self._mooclet_get_call("version")
@@ -148,11 +182,3 @@ class MoocletConnector:
 
     def get_policy_parameters_history(self) -> Dict:
         return self._mooclet_get_call("policyparametershistory")
-
-# mooclet = MoocletConnector(mooclet_id=106, token=DUMMY_MOOCLET_API_TOKEN, url=DUMMY_MOOCLET_URL)
-# response = mooclet.create_policy_parameters(policy_id=6,parameters={"policy_options":{"uniform_random": 0.0, "thompson_sampling_contextual": 1.0}})
-# print(response)
-
-# new_mooclet_id = mooclet.create_mooclet("301 " + str(datetime.datetime.now()),
-#                                         "thompson_sampling_contextual")
-# mooclet.get_mooclet(new_mooclet_id)

@@ -34,11 +34,17 @@ class OrganizationMoocletViewSet(mixins.CreateModelMixin,
         content_type =ContentType.objects.get_for_model(mooclet_authenticator)
         return Mooclet.objects.filter(object_id=mooclet_authenticator.id, content_type = content_type)
 
-    def perform_create(self, serializer):
-        organization = Organization.objects.get(pk=self.kwargs["organization_pk"])
-        serializer = CreateOrganizationMoocletSerializer(data=self.request.data, context={"organization_pk": self.kwargs["organization_pk"]})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateOrganizationMoocletSerializer
+        else:
+            return self.serializer_class
+
+    def get_serializer_context(self):
+        if self.action == 'create':
+            return {"organization_pk": self.kwargs["organization_pk"]}
+        else:
+            return {}
 
     """
     @action(detail=False)
