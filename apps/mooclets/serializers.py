@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.utils import field_mapping
 from .models import Mooclet, MoocletAuthenticator
-from .utils.mooclet_connector import MoocletCreator
+from backend.utils.mooclet_connector import MoocletCreator
 
 class MoocletSerializer(serializers.ModelSerializer):
     class Meta:

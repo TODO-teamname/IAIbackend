@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from mooclets.models import Mooclet, BasicMoocletAuthenticator
 from mooclets.serializers import CreateMoocletSerializer
-from mooclets.utils.mooclet_connector import MoocletConnector
+from backend.utils.mooclet_connector import MoocletConnector
 
 class MoocletCreateTestCase(TestCase):
     url = "url!"

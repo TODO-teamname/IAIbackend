@@ -12,9 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from mooclets.models import Mooclet
 from mooclets.serializers import MoocletSerializer, VersionSerializer
 
-from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
-from mooclets.utils import mooclet_connector
-from mooclets.utils.DataPipelines.MoocletPipeline import MoocletPipeline
+from backend.utils.mooclet_connector import MoocletConnector, MoocletCreator
+from backend.utils import mooclet_connector
+from backend.utils.DataPipelines.MoocletPipeline import MoocletPipeline
 
 
 ### USE THIS API TOKEN WITH CARE ###
