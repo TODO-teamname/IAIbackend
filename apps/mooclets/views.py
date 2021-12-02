@@ -39,6 +39,16 @@ class MoocletViewSet(generics.RetrieveAPIView,
             permission_set |= set(mooclet_permissions)
 
         return [permission() for permission in permission_set]
+
+    @action(detail=True)
+    def version(self, request, pk=None):
+        mooclet_connector = self.get_object().get_connector()
+        serializer = VersionSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            versions = mooclet_connector.get_versions()
+            return versions
+
     """
     @action(detail=False, methods=['post'])
     def create_mooclet(self, request):
@@ -51,14 +61,6 @@ class MoocletViewSet(generics.RetrieveAPIView,
         if mooclet:
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True)
-    def version(self, request, pk=None):
-        mooclet = self.get_object()
-        serializer = VersionSerializer(data=request.data)
-
-        if serializer.is_valid(raise_exception=True):
-            versions = mooclet.connector.get_versions()
-            return versions
 
     @versions.mapping.post
     def update_versions(self, request, pk=None):

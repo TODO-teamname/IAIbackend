@@ -102,6 +102,7 @@ else:
     DATABASES = {'default': dj_database_url.config(default='postgres://postgres:postgres@localhost:5433/csc301_local')}
 
 
+DEFAULT_MOOCLET_URL = os.getenv('DEFAULT_MOOCLET_URL')
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 

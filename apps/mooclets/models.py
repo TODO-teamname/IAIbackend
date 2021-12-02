@@ -9,12 +9,13 @@ from backend.utils.mooclet_connector import MoocletConnector
 
 class Mooclet(models.Model):
     external_id = models.IntegerField(blank=False)
-    name = models.CharField(max_length=200)
 
     # for abstraction
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    mooclet_data = None
 
     @property
     def url(self) -> str:
@@ -25,10 +26,34 @@ class Mooclet(models.Model):
         return self.content_object.get_token()
 
     def get_connector(self) -> MoocletConnector:
-        return MoocletConnector(mooclet_id = self.external_id, url = self.url, token = self.token)
+        return MoocletConnector(mooclet_id=self.external_id, url=self.url, token=self.token)
+
+    # NOTE: intention here is to minimize external API calls
+    def get_data(self):
+        if not self.mooclet_data:
+            mooclet_connector = self.get_connector()
+            self.mooclet_data = mooclet_connector.get_mooclet()
+        return self.mooclet_data
+
+    @property
+    def name(self):
+        return self.get_data()["name"]
+
+    @property
+    def policy(self):
+        return self.get_data()["policy"]
+
+    @property
+    def parameters(self):
+        return self.get_data()["parameters"]
 
     def get_permission_classes(self) -> List[BasePermissionMetaclass]:
         return self.content_object.get_permission_classes()
+
+    def save(self, *args, **kwargs):
+        mooclet_connector = self.get_connector()
+        mooclet_connector.check_mooclet()
+        super().save(*args, **kwargs)
 
     class Meta:
         constraints = [

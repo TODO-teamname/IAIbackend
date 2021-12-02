@@ -1,15 +1,13 @@
 from django.test import TestCase
-from django.db.utils import IntegrityError
-from django.core.exceptions import FieldError
 from rest_framework.exceptions import ValidationError
 
 from mooclets.models import Mooclet, BasicMoocletAuthenticator
 from mooclets.serializers import CreateMoocletSerializer
+from backend.utils.mooclet_connector import DUMMY_MOOCLET_URL, DUMMY_MOOCLET_API_TOKEN
 
 class MoocletSerializerTestCase(TestCase):
-    url = "http://test_url.com"
-    token = "token!"
-    name = 'Name'
+    url = DUMMY_MOOCLET_URL
+    token = DUMMY_MOOCLET_API_TOKEN
 
     def setUp(self):
         self.mooclet_authenticator = BasicMoocletAuthenticator(url=self.url, token=self.token)
@@ -17,14 +15,14 @@ class MoocletSerializerTestCase(TestCase):
 
     def test_create(self):
         data = {
-                'name': self.name,
                 'external_id': 1,
                 }
         serializer = CreateMoocletSerializer(data=data, context = {"mooclet_authenticator": self.mooclet_authenticator})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        mooclet = serializer.save()
 
-        mooclet = Mooclet.objects.get(name=self.name)
+
+        #mooclet = Mooclet.objects.get(name=self.name)
         self.assertEqual(mooclet.token, self.token)
         self.assertEqual(mooclet.url, self.url)
 
@@ -33,7 +31,6 @@ class MoocletSerializerTestCase(TestCase):
         wrong_auth.save()
 
         data = {
-                'name': self.name,
                 'external_id': 1,
                 }
 
@@ -45,11 +42,9 @@ class MoocletSerializerTestCase(TestCase):
 
     def test_create_two_same_mooclets_fails(self):
         data1 = {
-                'name': self.name,
                 'external_id': 1,
                 }
         data2 = {
-                'name': self.name,
                 'external_id': 1,
                 }
 

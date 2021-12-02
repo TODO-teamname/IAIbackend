@@ -10,8 +10,7 @@ from backend.utils.mooclet_connector import MoocletCreator
 class MoocletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mooclet
-        fields = ['id', 'external_id', 'name']
-
+        fields = ['id', 'external_id', 'name', 'policy']
 
 # for internal use
 class CreateMoocletSerializer(MoocletSerializer):
@@ -27,7 +26,7 @@ class CreateMoocletSerializer(MoocletSerializer):
         external_id = data["external_id"]
 
         if Mooclet.objects.filter(object_id=content_object.id, content_type=content_type, external_id=external_id).exists():
-            raise ValidationError("mooclet: Mooclet Already Exists")
+            raise ValidationError("external_id: Mooclet Already Exists")
         super().validate(data)
 
         return data
@@ -37,7 +36,6 @@ class CreateMoocletSerializer(MoocletSerializer):
         ret = super().to_internal_value(data)
         ret['content_object'] = content_object
         return ret
-
 
     class Meta(MoocletSerializer.Meta):
         write_only_fields = ('content_object')
