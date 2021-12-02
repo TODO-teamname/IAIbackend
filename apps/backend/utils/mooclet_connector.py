@@ -49,6 +49,7 @@ class ExternalServerConnector:
 
         kwargs = {'url': url, 'headers': headers}
         response = mooclet_call(requests.head, **kwargs)
+        print(response.json()["id"])
         return response
 
 class MoocletCreator(ExternalServerConnector):
@@ -56,7 +57,7 @@ class MoocletCreator(ExternalServerConnector):
         super().__init__(token=token, url=url)
 
     def create_mooclet(self, name: str, policy: int) -> Dict:
-        url = self.url + "mooclet",
+        url = self.url + "mooclet"
 
         data = {"policy": policy,  # policy id
                   "name": name}

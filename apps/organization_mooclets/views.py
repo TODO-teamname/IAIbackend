@@ -54,9 +54,9 @@ class OrganizationMoocletViewSet(mixins.CreateModelMixin,
         organization = Organization.objects.get(pk=organization_pk)
         mooclet_authenticator = organization.mooclet_authenticator
         mooclet_creator = mooclet_authenticator.get_mooclet_creator()
-        policy_id = request.data["policy_id"]
+        policy_id = int(request.data["policy_id"])
         mooclet_name = request.data["mooclet_name"]
         mooclet_data = mooclet_creator.create_mooclet(policy=policy_id, name=mooclet_name)
         Mooclet.objects.create(external_id=mooclet_data["id"], content_object=mooclet_authenticator)
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(mooclet_data, status=status.HTTP_201_CREATED)
 
