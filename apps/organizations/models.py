@@ -3,6 +3,8 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from commons.models import TimeStampMixin
+import os
+from django.conf import settings
 
 
 PERMISSION_LEVELS = (
@@ -12,8 +14,8 @@ PERMISSION_LEVELS = (
 
 class Organization(TimeStampMixin):
     # Note: maybe implement encryption? Also not THAT important. What is more important is that the server is secure.
-    token = models.CharField(max_length=100)
-    url = models.CharField(max_length=200)
+    token = models.CharField(max_length=200, default=os.getenv('DUMMY_MOOCLET_API_TOKEN'))
+    url = models.CharField(max_length=200, default=settings.DEFAULT_MOOCLET_URL)
     name = models.CharField(max_length=100, null=False)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Membership', related_name='organizations')
 

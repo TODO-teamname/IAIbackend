@@ -1,15 +1,13 @@
 from django.test import TestCase
 from django.db.utils import IntegrityError
-from django.core.exceptions import FieldError
 from rest_framework.permissions import IsAuthenticated
 
 from mooclets.models import Mooclet, BasicMoocletAuthenticator
-from mooclets.serializers import CreateMoocletSerializer
-from backend.utils.mooclet_connector import MoocletConnector
+from backend.utils.mooclet_connector import DUMMY_MOOCLET_URL, DUMMY_MOOCLET_API_TOKEN
 
 class MoocletCreateTestCase(TestCase):
-    url = "url!"
-    token = "token!"
+    url = DUMMY_MOOCLET_URL
+    token = DUMMY_MOOCLET_API_TOKEN
 
     def setUp(self):
         self.mooclet_authenticator = BasicMoocletAuthenticator(url=self.url, token=self.token)
@@ -26,7 +24,7 @@ class MoocletCreateTestCase(TestCase):
             mooclet.save()
 
     def test_create_mooclet_no_authenticator_fails(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(Exception):
             mooclet = Mooclet(external_id = 1)
             mooclet.save()
 
@@ -35,8 +33,8 @@ class MoocletCreateTestCase(TestCase):
         mooclet.save()
 
 class MoocletTestCase(TestCase):
-    url = "http://test_url.com"
-    token = "token!"
+    url = DUMMY_MOOCLET_URL
+    token = DUMMY_MOOCLET_API_TOKEN
 
     def setUp(self):
         mooclet_authenticator = BasicMoocletAuthenticator(url=self.url, token=self.token)
