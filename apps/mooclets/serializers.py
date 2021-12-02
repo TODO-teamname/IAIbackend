@@ -13,7 +13,7 @@ class MoocletSerializer(serializers.ModelSerializer):
         fields = ['id', 'external_id', 'name', 'policy']
 
 # for internal use
-class CreateMoocletSerializer(MoocletSerializer):
+class MoocletCreateSerializer(MoocletSerializer):
     def validate_content_object(self, value):
         if not isinstance(value, MoocletAuthenticator):
             raise ValueError("passed in an invalid authenticator during mooclet creation")
@@ -40,38 +40,42 @@ class CreateMoocletSerializer(MoocletSerializer):
     class Meta(MoocletSerializer.Meta):
         write_only_fields = ('content_object')
 
+class ExternalMoocletCreateSerializer():
+    def validate_content_object(self, value):
+        if not isinstance(value, MoocletAuthenticator):
+            raise ValueError("passed in an invalid authenticator during mooclet creation")
+        return value
+
+    def validate(self, data):
+        content_object = self.context["mooclet_authenticator"]
+        self.validate_content_object(content_object)
+
+        super().validate(data)
+
+        return data
+
+    def to_internal_value(self, data):
+        content_object = self.context["mooclet_authenticator"]
+        ret = super().to_internal_value(data)
+        ret['content_object'] = content_object
+        return ret
+
+    def create(self, validated_data):
+        content_object = validated_data.pop("content_object")
+        policy_id = validated_data.pop("policy_id")
+        mooclet_name = validated_data.pop("mooclet_name")
+        mooclet_creator = content_object.get_mooclet_creator()
+        mooclet_data = mooclet_creator.create(policy=policy_id, name=mooclet_name)
+        return Mooclet(content_object=content_object, external_id=mooclet_data["id"])
+
+    class Meta(MoocletSerializer.Meta):
+        write_only_fields = ('content_object')
+        optional_fields = ('external_id')
+
 class APICallSerializer(serializers.Serializer):
     mooclet = MoocletSerializer()
-    # Did not add thorough validation for fields, change to NotImplementedError
-    def validate(self):
-        return True
 
 class VersionSerializer(APICallSerializer):
     version_name = serializers.CharField()
     version_json = serializers.JSONField()
 
-class CreateExternalMoocletSerializer(serializers.ModelSerializer):
-    policy_id = serializers.IntegerField()
-
-    def validate_policy_id(self, data):
-        if data['policy_id'] < 0:
-            raise serializers.ValidationError("oh no")
-
-    def create(self, validated_data):
-        organization = Organization.objects.get(organization=validated_data['organization'])
-        token = organization.token
-        url = organization.url
-
-        new_id, mooclet_info = MoocletCreator(token, url, validated_data['mooclet_name'], validated_data['policy_id']).create_mooclet()
-        mooclet = Mooclet(new_id, validated_data['mooclet_name'], validated_data["organization"])
-        mooclet.save()
-        return mooclet
-
-        
-    class Meta:
-        model = Mooclet
-        fields = ('id', 'mooclet_name', 'external_id', 'organization')
-        extra_kwargs = {
-            'organization': {'write_only': True},
-            'external_id': {'write_only': True},
-        }

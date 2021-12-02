@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from rest_framework.permissions import BasePermissionMetaclass, IsAuthenticated
 from django.core.exceptions import FieldError
-from backend.utils.mooclet_connector import MoocletConnector
+from backend.utils.mooclet_connector import MoocletConnector, MoocletCreator
 
 
 class Mooclet(models.Model):
@@ -74,6 +74,9 @@ class MoocletAuthenticator(models.Model):
 
     def get_permission_classes(self) -> List[BasePermissionMetaclass]:
         raise NotImplementedError
+
+    def get_mooclet_creator(self) -> MoocletCreator:
+        return MoocletCreator(url=self.get_url(), token=self.get_token())
 
 class BasicMoocletAuthenticator(MoocletAuthenticator):
     url = models.URLField()

@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.http.response import HttpResponse, HttpResponseBadRequest
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 import requests
 import datetime
@@ -34,20 +37,40 @@ class MoocletViewSet(generics.RetrieveAPIView,
         permission_set = set(self.permission_classes)
 
         if self.detail == True:
-            print("detail")
-            mooclet_permissions = self.get_object().get_permissions()
+            try:
+                mooclet = Mooclet.objects.get(pk=self.kwargs['pk'])
+            except ObjectDoesNotExist:
+                raise Http404
+            mooclet_permissions = mooclet.get_permission_classes()
             permission_set |= set(mooclet_permissions)
 
         return [permission() for permission in permission_set]
 
     @action(detail=True)
-    def version(self, request, pk=None):
+    def versions(self, request, pk=None):
         mooclet_connector = self.get_object().get_connector()
-        serializer = VersionSerializer(data=request.data)
+        versions = mooclet_connector.get_versions()
+        return Response(versions, status=status.HTTP_200_OK)
 
+    @versions.mapping.post
+    def update_versions(self, request, pk=None):
+        mooclet = self.get_serializer()
+        serializer = VersionSerializer(data=request.data, mooclet=mooclet)
         if serializer.is_valid(raise_exception=True):
-            versions = mooclet_connector.get_versions()
-            return versions
+            version_created = mooclet.connector.create_versions(request.data)
+            return Response(version_created, status=status.HTTP_201_CREATED)
+
+    @action(detail=True)
+    def mooclet(self, request, pk=None):
+        mooclet_connector = self.get_object().get_connector()
+        mooclet = mooclet_connector.get_mooclet()
+        return Response(mooclet, status=status.HTTP_200_OK)
+
+    @action(detail=True)
+    def policy(self, request, pk=None):
+        mooclet_connector = self.get_object().get_connector()
+        policy_parameters = mooclet_connector.get_policy_parameters()
+        return Response(policy_parameters, status=status.HTTP_200_OK)
 
     """
     @action(detail=False, methods=['post'])
