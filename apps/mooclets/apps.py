@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class MoocletConfig(AppConfig):
+class MoocletsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'mooclet'
+    name = 'mooclets'

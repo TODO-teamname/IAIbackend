@@ -48,7 +48,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'backend',
     'accounts',
+    'mooclets',
     'organizations',
+    'organization_mooclets',
     'rest_framework',
     'corsheaders',
 ]
