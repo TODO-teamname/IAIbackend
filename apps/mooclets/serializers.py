@@ -72,10 +72,17 @@ class ExternalMoocletCreateSerializer():
         write_only_fields = ('content_object')
         optional_fields = ('external_id')
 
-class APICallSerializer(serializers.Serializer):
-    mooclet = MoocletSerializer()
 
-class VersionSerializer(APICallSerializer):
-    version_name = serializers.CharField()
+class VersionSerializer(serializers.Serializer):
+    version_name = serializers.CharField(source='name')
+    version_text = serializers.CharField(source='text')
     version_json = serializers.JSONField()
+
+
+class PolicyParameterSerializer(serializers.Serializer):
+    policy_id = serializers.IntegerField(source='policy')
+    policy_parameters = serializers.JSONField(source='parameters')
+
+class VariableSerializer(serializers.Serializer):
+    variable_name = serializers.CharField(source='name')
 
