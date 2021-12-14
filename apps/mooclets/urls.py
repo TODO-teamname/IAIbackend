@@ -3,7 +3,7 @@ from django.urls import path, include
 from .views import MoocletViewSet
 
 router = routers.DefaultRouter()
-router.register(r'mooclets', MoocletViewSet)
+router.register(r'mooclet', MoocletViewSet)
 
 urlpatterns = [
     path(r'', include(router.urls)),
