@@ -29,8 +29,7 @@ def mooclet_call(method, **kwargs):
     if status_code == 404:
         raise ExternalResourceNotFound('That mooclet does not exist on the external server')
 
-    if status_code not in [400]: 
-        response.raise_for_status()
+    response.raise_for_status()
 
     return response
 
@@ -81,7 +80,7 @@ class MoocletConnector(ExternalServerConnector):
         self.mooclet_id = mooclet_id
 
 
-    def _mooclet_get_call(self, endpoint, params=None, headers=None, url=None):
+    def _mooclet_get_call(self, endpoint, params=None, headers=None, url=None) -> Dict:
         if url == None:
             url = self.url + endpoint
 
@@ -103,7 +102,7 @@ class MoocletConnector(ExternalServerConnector):
             page = mooclet_call(requests.get, **kwargs).json()
             response_json["results"] += page["results"]
 
-        return response_json, response.status_code
+        return response_json
 
 
     def _mooclet_post_call(self, endpoint, data, headers=None, url=None):
@@ -126,7 +125,7 @@ class MoocletConnector(ExternalServerConnector):
             page = mooclet_call(requests.get, **kwargs).json()
             response_json["results"] += page["results"]
 
-        return response_json, response.status_code
+        return response_json
 
     def check_mooclet(self):
         url = self.url + "mooclet"
@@ -140,7 +139,7 @@ class MoocletConnector(ExternalServerConnector):
 
     def get_mooclet(self, fields: List[str]=None):
         endpoint = "mooclet/" + str(self.mooclet_id)
-        data, response = self._mooclet_get_call(endpoint=endpoint)
+        data = self._mooclet_get_call(endpoint=endpoint)
 
         if not fields:
             return data
@@ -150,24 +149,35 @@ class MoocletConnector(ExternalServerConnector):
         for field in fields:
             ret[field] = data[field]
 
-        return ret, response
+        return ret
 
     def get_versions(self):
         return self._mooclet_get_call("version")
+
+    def get_policy_parameters(self):
+        return self._mooclet_get_call("policyparameters")
+
+    def get_policy_parameters_history(self):
+        return self._mooclet_get_call("policyparametershistory")
+
+    def get_values(self):  # for getting variable values
+        return self._mooclet_get_call("value")
+
+    def get_policies(self):
+        return self._mooclet_get_call("policy")
+
+    def get_learner(self, learner_id: int):
+        return self._mooclet_get_call("learner/" + str(learner_id))
 
     def create_versions(self, **data):
         data["mooclet"] = self.mooclet_id
         return self._mooclet_post_call("version", data=data)
 
-    def get_policy_parameters(self):
-        return self._mooclet_get_call("policyparameters")
 
     def create_policy_parameters(self, **data):
         data["mooclet"] = self.mooclet_id
         return self._mooclet_post_call("policyparameters", data=data)
 
-    def get_values(self):  # for getting variable values
-        return self._mooclet_get_call("value")
 
     def create_value(self, variable_name):
         data = {
@@ -179,5 +189,3 @@ class MoocletConnector(ExternalServerConnector):
     def create_variable(self, **data):
         return self._mooclet_post_call("variable", data=data)
 
-    def get_policy_parameters_history(self):
-        return self._mooclet_get_call("policyparametershistory")

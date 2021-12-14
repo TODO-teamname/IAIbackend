@@ -1,6 +1,4 @@
-from django.shortcuts import render
 from django.http.response import HttpResponse, HttpResponseBadRequest
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
@@ -9,22 +7,14 @@ import datetime
 import tempfile # used for downloader
 from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from mooclets.models import Mooclet
-from mooclets.serializers import MoocletSerializer, VersionSerializer, PolicyParameterSerializer, VariableSerializer
+from mooclets.serializers import MoocletSerializer, VersionSerializer, PolicyParameterSerializer, VariableSerializer, DownloadVarNamesSerializer
 
-from backend.utils.mooclet_connector import MoocletConnector, MoocletCreator
-from backend.utils import mooclet_connector
-from backend.utils.DataPipelines.MoocletPipeline import MoocletPipeline
-
-
-### USE THIS API TOKEN WITH CARE ###
-MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
-URL = mooclet_connector.DUMMY_MOOCLET_URL
-#class InternalMoocletViewSet(viewsets.ViewSet):
-        
+from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
+from mooclets.utils.DataPipelines.MoocletPipeline import MoocletPipeline
 
 class MoocletViewSet(generics.RetrieveAPIView,
                      viewsets.GenericViewSet):
@@ -48,8 +38,10 @@ class MoocletViewSet(generics.RetrieveAPIView,
     
     def _get_helper(self, connector_method):
         mooclet = self.get_object()
-        response_json, response_status = connector_method(mooclet.get_connector())
-        return Response(response_json, status=response_status)
+
+        response_json = connector_method(mooclet.get_connector())
+
+        return Response(response_json, status=status.HTTP_200_OK)
 
     def _update_helper(self, call_serializer, connector_method):
         mooclet = self.get_object()
@@ -57,9 +49,14 @@ class MoocletViewSet(generics.RetrieveAPIView,
         serializer = call_serializer(data=self.request.data)
         serializer.is_valid(raise_exception=True)
 
-        response_json, response_status = connector_method(mooclet.get_connector(), **serializer.validated_data)
+        try:
+            response_json = connector_method(mooclet.get_connector(), **serializer.validated_data)
+        except requests.HTTPError as e:
+            if e.response.status_code == 400:
+                return Response(e.response.json(), status=status.HTTP_400_BAD_REQUEST)
+            raise
 
-        return Response(response_json, status=response_status)
+        return Response(response_json, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def policyparameters(self, request, pk=None):
@@ -89,13 +86,17 @@ class MoocletViewSet(generics.RetrieveAPIView,
                                    connector_method=MoocletConnector.create_versions)
 
     @action(detail=True, methods=['get'])
-    def download(self, request):
+    def download(self, request, pk=None):
         mooclet = self.get_object()
-        mooclet_connector = mooclet.connector
+        mooclet_connector = mooclet.get_connector()
+
+        var_names = eval(request.query_params.get('var_names'))
+        serializer = DownloadVarNamesSerializer(data=var_names)
+        serializer.is_valid(raise_exception=True)
 
         tfile = tempfile.NamedTemporaryFile(mode="w+")
 
-        a = MoocletPipeline(mooclet_connector)
+        a = MoocletPipeline(mooclet_connector, var_names)
 
         try:
             a.get_output(tfile)

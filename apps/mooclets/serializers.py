@@ -1,11 +1,8 @@
-from django.db.models import fields
-from django.db.models.fields import files
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.utils import field_mapping
 from .models import Mooclet, MoocletAuthenticator
-from backend.utils.mooclet_connector import MoocletCreator
+from mooclets.utils.mooclet_connector import MoocletCreator
 
 class MoocletSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,3 +83,6 @@ class PolicyParameterSerializer(serializers.Serializer):
 class VariableSerializer(serializers.Serializer):
     variable_name = serializers.CharField(source='name')
 
+class DownloadVarNamesSerializer(serializers.Serializer):
+    reward = serializers.CharField()
+    policy = serializers.IntegerField()
