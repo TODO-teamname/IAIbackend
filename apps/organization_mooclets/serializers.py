@@ -16,7 +16,9 @@ class OrganizationMoocletCreateSerializer(MoocletCreateSerializer):
     class Meta(MoocletCreateSerializer.Meta):
         pass
 
-class OrganizationExternalMoocletCreateSerializer(ExternalMoocletCreateSerializer):
+class OrganizationExternalMoocletCreateSerializer(serializers.Serializer):
+    policy = serializers.IntegerField()
+    name = serializers.CharField()
     def to_internal_value(self, data):
         organization = Organization.objects.get(pk=self.context["organization_pk"])
         self.context["mooclet_authenticator"] = organization.mooclet_authenticator
