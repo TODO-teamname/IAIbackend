@@ -70,7 +70,7 @@ class MoocletCreator(ExternalServerConnector):
         kwargs = {'url': url, 'data': data, 'headers': headers, 'timeout': timeout}
 
         response = mooclet_call(requests.post, **kwargs)
-        return response
+        return response.json()
 
 
 class MoocletConnector(ExternalServerConnector):
