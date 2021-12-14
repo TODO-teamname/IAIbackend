@@ -90,7 +90,8 @@ class MoocletViewSet(generics.RetrieveAPIView,
         mooclet = self.get_object()
         mooclet_connector = mooclet.get_connector()
 
-        var_names = eval(request.query_params.get('var_names'))
+        #var_names = eval(request.query_params.get('var_names'))
+        var_names = {"reward": "mturk_ts_reward_round_8", "policy": 6}
         serializer = DownloadVarNamesSerializer(data=var_names)
         serializer.is_valid(raise_exception=True)
 
