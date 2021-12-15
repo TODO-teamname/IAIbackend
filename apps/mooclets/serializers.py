@@ -1,11 +1,8 @@
-from django.db.models import fields
-from django.db.models.fields import files
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.utils import field_mapping
 from .models import Mooclet, MoocletAuthenticator
-from backend.utils.mooclet_connector import MoocletCreator
+from mooclets.utils.mooclet_connector import MoocletCreator
 
 class MoocletSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,10 +69,20 @@ class ExternalMoocletCreateSerializer():
         write_only_fields = ('content_object')
         optional_fields = ('external_id')
 
-class APICallSerializer(serializers.Serializer):
-    mooclet = MoocletSerializer()
 
-class VersionSerializer(APICallSerializer):
-    version_name = serializers.CharField()
+class VersionSerializer(serializers.Serializer):
+    version_name = serializers.CharField(source='name')
+    version_text = serializers.CharField(source='text')
     version_json = serializers.JSONField()
 
+
+class PolicyParameterSerializer(serializers.Serializer):
+    policy_id = serializers.IntegerField(source='policy')
+    policy_parameters = serializers.JSONField(source='parameters')
+
+class VariableSerializer(serializers.Serializer):
+    variable_name = serializers.CharField(source='name')
+
+class DownloadVarNamesSerializer(serializers.Serializer):
+    reward = serializers.CharField()
+    policy = serializers.IntegerField()

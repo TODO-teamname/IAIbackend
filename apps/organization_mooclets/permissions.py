@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from django.shortcuts import get_object_or_404
 
 from organizations.models import Organization
 from organizations.permissions import is_member, is_admin
@@ -9,7 +10,7 @@ class OrganizationMoocletPermissions(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        organization = Organization.objects.get(pk=view.kwargs["organization_pk"])
+        organization = get_object_or_404(Organization, pk=view.kwargs["organization_pk"])
 
         if is_admin(user, organization):
             return True

@@ -1,6 +1,4 @@
-from django.shortcuts import render
 from django.http.response import HttpResponse, HttpResponseBadRequest
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
@@ -9,22 +7,14 @@ import datetime
 import tempfile # used for downloader
 from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from mooclets.models import Mooclet
-from mooclets.serializers import MoocletSerializer, VersionSerializer
+from mooclets.serializers import MoocletSerializer, VersionSerializer, PolicyParameterSerializer, VariableSerializer, DownloadVarNamesSerializer
 
-from backend.utils.mooclet_connector import MoocletConnector, MoocletCreator
-from backend.utils import mooclet_connector
-from backend.utils.DataPipelines.MoocletPipeline import MoocletPipeline
-
-
-### USE THIS API TOKEN WITH CARE ###
-MOOCLET_API_TOKEN = mooclet_connector.DUMMY_MOOCLET_API_TOKEN
-URL = mooclet_connector.DUMMY_MOOCLET_URL
-#class InternalMoocletViewSet(viewsets.ViewSet):
-        
+from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
+from mooclets.utils.DataPipelines.MoocletPipeline import MoocletPipeline
 
 class MoocletViewSet(generics.RetrieveAPIView,
                      viewsets.GenericViewSet):
@@ -45,250 +35,79 @@ class MoocletViewSet(generics.RetrieveAPIView,
             permission_set |= set(mooclet_permissions)
 
         return [permission() for permission in permission_set]
-
-    @action(detail=True)
-    def versions(self, request, pk=None):
-        mooclet_connector = self.get_object().get_connector()
-        versions = mooclet_connector.get_versions()
-        return Response(versions, status=status.HTTP_200_OK)
-
-    @versions.mapping.post
-    def update_versions(self, request, pk=None):
-        mooclet = self.get_serializer()
-        serializer = VersionSerializer(data=request.data, mooclet=mooclet)
-        if serializer.is_valid(raise_exception=True):
-            version_created = mooclet.connector.create_versions(request.data)
-            return Response(version_created, status=status.HTTP_201_CREATED)
-
-    @action(detail=True)
-    def mooclet(self, request, pk=None):
-        mooclet_connector = self.get_object().get_connector()
-        mooclet = mooclet_connector.get_mooclet()
-        return Response(mooclet, status=status.HTTP_200_OK)
-
-    @action(detail=True)
-    def policy(self, request, pk=None):
-        mooclet_connector = self.get_object().get_connector()
-        policy_parameters = mooclet_connector.get_policy_parameters()
-        return Response(policy_parameters, status=status.HTTP_200_OK)
-
-    """
-    @action(detail=False, methods=['post'])
-    def create_mooclet(self, request):
-        #Creates an external mooclet and adds it to the local database
-        serializer = CreateExternalMoocletSerializer(data=request.data)
-
-        serializer.is_valid(raise_exception=True)
-        mooclet = serializer.create()
-
-        if mooclet:
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-    @versions.mapping.post
-    def update_versions(self, request, pk=None):
+    
+    def _get_helper(self, connector_method):
         mooclet = self.get_object()
-        serializer = VersionSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            version_created = mooclet.connector.create_versions(version_name)
-            return version_created
-    """
 
-# call external api to create and get mooclet basic inof from IAI's MOOClet server
-@api_view(('GET', 'POST'))
-def process_mooclet(request):
-    endpoint = "mooclet"
-    if request.method == "GET":
-        objects = requests.get(
-            url = URL + endpoint + "/" + str(request.query_params.get('mooclet_id')),  # specify mooclet_id
-            headers = {'Authorization': f'Token {MOOCLET_API_TOKEN}'},
-            timeout=20
-        )
-        if objects.status_code != 200:
-            print("unable to get mooclet")
-        else:
-            mooclet_data = objects.json()
-            print("obtained mooclet data: ", mooclet_data)
-            return Response(mooclet_data, status=status.HTTP_200_OK)
+        response_json = connector_method(mooclet.get_connector())
 
-    elif request.method == "POST":
-        params = {"policy": int(str(request.query_params.get('policy_id'))),
-                  "name": str(request.query_params.get('mooclet_name')) + str(datetime.datetime.now())}
-        objects = requests.post(
-            url = URL + endpoint,
-            data = params,
-            headers = {'Authorization': f'Token {MOOCLET_API_TOKEN}'},
-            timeout=20
-        )
-        if objects.status_code != 201:
-            print("unable to create mooclet")
-        else:
-            mooclet_data = objects.json()
-            print("created mooclet in IAI's server: ", mooclet_data)
-            # # TODO: write to DB
-            # mooclet = Mooclet(
-            #     study=...
-            #     external_id=mooclet_data['id']
-            #           )
-            # mooclet.save()
-            # print("new mooclet saved to django db")
-            return Response(mooclet_data, status=status.HTTP_201_CREATED)
+        return Response(response_json, status=status.HTTP_200_OK)
 
+    def _update_helper(self, call_serializer, connector_method):
+        mooclet = self.get_object()
 
-# call external api to create & get policy parameters for a given mooclet_id
-@api_view(('GET', 'POST'))
-def process_policy_parameters(request):
-    url = URL
-    token = MOOCLET_API_TOKEN
-    try:
-        mooclet_id = int(str(request.query_params.get('mooclet_id')))
-    except (AttributeError, requests.HTTPError) as e:
-        print("Error: gave wrong parameters: check mooclet_id")
-        print(str(e))
-        return HttpResponseBadRequest(e)
+        serializer = call_serializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
 
-    try:
-        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    if request.method == "GET":  # given mooclet_id
         try:
-            policy_params_data = mooclet_connector.get_policy_parameters()
-            # TODO: add policy parameter field to Django model Mooclet() & seed here
-            return Response(policy_params_data, status=status.HTTP_200_OK)
+            response_json = connector_method(mooclet.get_connector(), **serializer.validated_data)
+        except requests.HTTPError as e:
+            if e.response.status_code == 400:
+                return Response(e.response.json(), status=status.HTTP_400_BAD_REQUEST)
+            raise
+
+        return Response(response_json, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'])
+    def policyparameters(self, request, pk=None):
+        return self._get_helper(connector_method=MoocletConnector.get_policy_parameters)
+
+    @action(detail=True, methods=['get'])
+    def variables(self, request, pk=None):
+        return self._get_helper(connector_method=MoocletConnector.get_values)
+
+    @action(detail=True, methods=['get'])
+    def versions(self, request, pk=None):
+        return self._get_helper(connector_method=MoocletConnector.get_versions)
+
+    @variables.mapping.post
+    def update_variables(self, request, pk=None):
+        return self._update_helper(call_serializer=VariableSerializer, 
+                                   connector_method=MoocletConnector.create_variable)
+
+    @policyparameters.mapping.post
+    def update_policyparameters(self, request, pk=None):
+        return self._update_helper(call_serializer=PolicyParameterSerializer, 
+                                   connector_method=MoocletConnector.create_policy_parameters)
+
+    @versions.mapping.post
+    def update_versions(self, request, pk=None):
+        return self._update_helper(call_serializer=VersionSerializer, 
+                                   connector_method=MoocletConnector.create_versions)
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        mooclet = self.get_object()
+        mooclet_connector = mooclet.get_connector()
+
+        #var_names = eval(request.query_params.get('var_names'))
+        var_names = {"reward": "mturk_ts_reward_round_8", "policy": 6}
+        serializer = DownloadVarNamesSerializer(data=var_names)
+        serializer.is_valid(raise_exception=True)
+
+        tfile = tempfile.NamedTemporaryFile(mode="w+")
+
+        a = MoocletPipeline(mooclet_connector, var_names)
+
+        try:
+            a.get_output(tfile)
         except requests.HTTPError as e:
             return HttpResponseBadRequest(e)
 
-    elif request.method == "POST":  # given mooclet_id and policy_id
-        # pre-condition: the mooclet must have been created already
-        try:
-            policy_id = int(str(request.query_params.get('policy_id')))
-            policy_parameters = request.query_params.get('policy_parameters')  # json string
-        except (AttributeError, requests.HTTPError) as e:
-            print("Error: gave wrong parameters: check policy_id or parameters")
-            print(str(e))
-        try:
-            policy_params_object_created = mooclet_connector.create_policy_parameters(policy_id, policy_parameters)
-            return Response(policy_params_object_created, status=status.HTTP_201_CREATED)
-        except requests.HTTPError as e:
-            return HttpResponseBadRequest(e)
+        filename = f"{mooclet.name}.csv"
 
+        response = HttpResponse(tfile, content_type="text/csv")
+        response['Content-Dispostion'] = "attachment; filename=%s" % filename
 
-# call external api to create & get variables and their values for a given mooclet_id
-@api_view(('GET', 'POST'))
-def process_variables(request):
-    url = URL
-    token = MOOCLET_API_TOKEN
-    try:
-        mooclet_id = int(str(request.query_params.get('mooclet_id')))
-    except (AttributeError, requests.HTTPError) as e:
-        print("Error: gave wrong parameters: check mooclet_id")
-        print(str(e))
-        return HttpResponseBadRequest(e)
+        return response
 
-    try:
-        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    if request.method == "GET":
-        try:
-            variables_values = mooclet_connector.get_values()
-            return Response(variables_values, status=status.HTTP_200_OK)
-        except requests.HTTPError as e:
-            return HttpResponseBadRequest(e)
-
-    elif request.method == "POST":
-        try:
-            variable_name = str(request.query_params.get('variable_name'))
-        except (AttributeError, requests.HTTPError) as e:
-            print("Error: gave wrong parameters: check variable_name or variable_value")
-            print(str(e))
-            return HttpResponseBadRequest(e)
-
-        try:
-            # create variable
-            variable_created = mooclet_connector.create_variable(variable_name)
-            temporary_value = mooclet_connector.create_value(variable_name)  # TODO: remove; don't manually create value
-            return Response(variable_created, status=status.HTTP_201_CREATED)
-        except requests.HTTPError as e:
-            return HttpResponseBadRequest(e)
-
-
-@api_view(('GET', 'POST'))
-def process_versions(request):
-    url = URL
-    token = MOOCLET_API_TOKEN
-    try:
-        mooclet_id = int(str(request.query_params.get('mooclet_id')))
-    except (AttributeError, requests.HTTPError) as e:
-        print("Error: gave wrong parameters: check mooclet_id")
-        print(str(e))
-        return HttpResponseBadRequest(e)
-
-    try:
-        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, token=token, url=url)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    if request.method == 'GET':
-        try:
-            versions = mooclet_connector.get_versions()
-            return Response(versions, status=status.HTTP_200_OK)
-        except requests.HTTPError as e:
-            return HttpResponseBadRequest(e)
-    elif request.method == 'POST':
-        try:
-            version_name = str(request.query_params.get('version_name'))
-            version_json = request.query_params.get('version_json')  # json string
-            version_text = str(request.query_params.get('version_text'))
-        except (AttributeError, requests.HTTPError) as e:
-            print("Error: gave wrong parameters: check version_name")
-            return HttpResponseBadRequest(e)
-
-        try:
-            version_created = mooclet_connector.create_versions(version_name, version_json, version_text)
-            return Response(version_created, status=status.HTTP_201_CREATED)
-        except requests.HTTPError as e:
-            return HttpResponseBadRequest(e)
-
-
-def download_data(request):
-    try:
-        mooclet_id = str(request.query_params.get('mooclet_id'))
-    except (AttributeError, requests.HTTPError) as e:
-        # NOTE: We eventually want to stop using this, but use for testing.
-        print("Error: " + str(e))
-        mooclet_id = 25
-        #return HttpResponseBadRequest(e)
-
-    token = MOOCLET_API_TOKEN
-    url = URL
-
-    try:
-        mooclet_connector = MoocletConnector(mooclet_id=mooclet_id, url=url, token=token)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    tfile = tempfile.NamedTemporaryFile(mode="w+")
-
-    a = MoocletPipeline(mooclet_connector)
-
-    try:
-        a.get_output(tfile)
-    except requests.HTTPError as e:
-        return HttpResponseBadRequest(e)
-
-    filename = f"{mooclet_id}.csv"
-
-    response = HttpResponse(tfile, content_type="text/csv")
-    response['Content-Dispostion'] = "attachment; filename=%s" % filename
-
-    return response
-
-
-# list & create models
-class MoocletCreate(generics.ListCreateAPIView):
-    queryset = Mooclet.objects.all()
-    serializer_class = MoocletSerializer

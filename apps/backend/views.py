@@ -11,9 +11,9 @@ from rest_framework import generics
 from .models import Mooclet
 from .serializers import MoocletSerializer
 
-from .utils.mooclet_connector import MoocletConnector, MoocletCreator
-from .utils import mooclet_connector
-from .utils.DataPipelines.MoocletPipeline import MoocletPipeline
+from mooclets.utils.mooclet_connector import MoocletConnector, MoocletCreator
+from mooclets.utils import mooclet_connector
+from mooclets.utils.DataPipelines.MoocletPipeline import MoocletPipeline
 
 
 ### USE THIS API TOKEN WITH CARE ###

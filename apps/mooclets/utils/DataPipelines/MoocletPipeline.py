@@ -55,7 +55,7 @@ class MoocletPipeline(DataPipeline):
         # raw_mooclet = pd.DataFrame.from_records(raw_mooclet, index=[0])[["id", "name"]]
         # self.intermediate_data["mooclet"] = raw_mooclet  # not being used again
         
-        raw_values = self.mooclet_connector.get_values()  # TODO: error check
+        raw_values = self.mooclet_connector.get_values()
         raw_values = pd.DataFrame.from_records(raw_values["results"])
         raw_values = raw_values.sort_values(by=["learner", "timestamp"])
         raw_values = raw_values.drop_duplicates(subset=["learner", "timestamp"])
@@ -75,9 +75,7 @@ class MoocletPipeline(DataPipeline):
 
         # self.intermediate_data["policies"] = get_policies()
         # TODO: remove external api call
-        url = URL + "policy"
-        objects = requests.get(url, headers={'Authorization': f'Token {MOOCLET_API_TOKEN}'})
-        raw_policies = objects.json()
+        raw_policies = self.mooclet_connector.get_policies()
         self.intermediate_data["policies"] = pd.DataFrame.from_records(raw_policies["results"])
 
         self.intermediate_data["learners"] = sorted(raw_values["learner"].unique())
@@ -180,7 +178,7 @@ class MoocletPipeline(DataPipeline):
                                "version_json"] + f"_round_{round_no}"
                 # df  -> df_learner -> df_learner_arm_value -> df_reward_value
                 record = df[df["batch_group"] == i]
-                record = record[record["learner"] == get_learner_name_by_id(int(dict["user_id"]))]
+                record = record[record["learner"] == get_learner_name_by_id(self.mooclet_connector, int(dict["user_id"]))]
                 record = record[
                     record[self.intermediate_data["version_json"]] == dict[
                         arm_text]]
@@ -278,11 +276,10 @@ def get_version_by_version_id(versions, v_id):
         return None
 
 
-def get_learner_name_by_id(learner_id):
+def get_learner_name_by_id(mooclet_connector, learner_id):
     # TODO: move external api call
-    url = URL + "learner/" + str(learner_id)
-    objects = requests.get(url, headers={'Authorization': f'Token {MOOCLET_API_TOKEN}'})
-    return objects.json()["name"]
+    result = mooclet_connector.get_learner(learner_id)
+    return result["name"]
 
 
 def get_valid_contextual_values(contextuals, timestamp):
